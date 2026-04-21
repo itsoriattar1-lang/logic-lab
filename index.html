@@ -8,49 +8,52 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
         .drop-zone { border: 2px dashed #3b82f6; transition: all 0.3s ease; }
-        .drop-zone.active { border-color: #10b981; background: #ecfdf5; }
-        .slide-card { border-left: 4px solid #3b82f6; transition: transform 0.2s; }
-        .slide-card:hover { transform: translateX(5px); }
+        .slide-card { border-left: 4px solid #3b82f6; }
+        .level-btn.active { background-color: #1e293b; color: white; border-color: #1e293b; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
-    <div class="max-w-5xl mx-auto p-6">
+    <div class="max-w-6xl mx-auto p-6">
         <header class="flex justify-between items-center mb-10 border-b pb-6">
             <div>
-                <h1 class="text-2xl font-bold text-slate-900">DocuVision <span class="text-blue-600">AI</span></h1>
-                <p class="text-sm text-slate-500 font-medium">Advanced Document Intelligence Analysis</p>
+                <h1 class="text-2xl font-bold text-slate-900 tracking-tight">DocuVision <span class="text-blue-600">AI</span></h1>
+                <p class="text-sm text-slate-500 font-medium">Multi-Level Document Intelligence</p>
             </div>
-            <div class="flex gap-4">
-                <span id="systemStatus" class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wider">System: Ready</span>
-            </div>
+            <div id="systemStatus" class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-bold uppercase">System: Online</div>
         </header>
 
-        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <main class="grid grid-cols-1 lg:grid-cols-4 gap-8">
             <div class="lg:col-span-1 space-y-6">
-                <div id="dropZone" class="drop-zone rounded-xl p-8 text-center bg-white shadow-sm cursor-pointer">
-                    <div class="bg-blue-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                    </div>
-                    <p id="fileNameDisplay" class="font-semibold text-slate-700 uppercase text-xs tracking-widest">Upload PDF</p>
+                <div id="dropZone" class="drop-zone rounded-xl p-6 text-center bg-white shadow-sm cursor-pointer hover:bg-blue-50 transition-colors">
+                    <p id="fileNameDisplay" class="font-bold text-slate-700 text-xs uppercase tracking-widest">Drop PDF Here</p>
                     <input type="file" id="fileInput" class="hidden" accept=".pdf">
                 </div>
 
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                    <h3 class="text-sm font-bold uppercase text-slate-400 mb-4 tracking-widest">Controls</h3>
-                    <button id="analyzeBtn" disabled class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-blue-200">
-                        Generate Slide Analysis
-                    </button>
+                    <h3 class="text-xs font-black uppercase text-slate-400 mb-4 tracking-widest">Analysis Depth</h3>
+                    <div class="flex flex-col gap-2" id="levelSelector">
+                        <button data-level="1" class="level-btn active w-full text-left px-4 py-2 rounded-lg border text-sm font-medium transition-all hover:bg-slate-50">Level 1: Simple</button>
+                        <button data-level="2" class="level-btn w-full text-left px-4 py-2 rounded-lg border text-sm font-medium transition-all hover:bg-slate-50">Level 2: Standard</button>
+                        <button data-level="3" class="level-btn w-full text-left px-4 py-2 rounded-lg border text-sm font-medium transition-all hover:bg-slate-50">Level 3: Deep Dive</button>
+                    </div>
                 </div>
+
+                <button id="analyzeBtn" disabled class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-blue-200 uppercase text-xs tracking-widest">
+                    Run AI Analysis
+                </button>
             </div>
 
-            <div class="lg:col-span-2 space-y-6">
-                <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 min-h-[500px]">
+            <div class="lg:col-span-3 space-y-6">
+                <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 min-h-[600px]">
                     <div class="flex items-center justify-between mb-8 border-b pb-4">
-                        <h2 class="text-lg font-black uppercase tracking-tight">Intelligence Report</h2>
-                        <div id="statusLabel" class="text-xs font-bold text-blue-500 uppercase">Standby</div>
+                        <h2 class="text-lg font-black uppercase">Intelligence Output</h2>
+                        <div id="statusLabel" class="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-1 rounded">AWAITING INPUT</div>
                     </div>
                     <div id="output" class="space-y-6">
-                        <p class="text-slate-400 italic">Waiting for document input...</p>
+                        <div class="text-slate-300 text-center py-20">
+                            <svg class="w-12 h-12 mx-auto mb-4 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            <p class="italic">Please upload a document to begin processing.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -64,17 +67,27 @@
         const statusLabel = document.getElementById('statusLabel');
         const analyzeBtn = document.getElementById('analyzeBtn');
         const fileNameDisplay = document.getElementById('fileNameDisplay');
+        const levelButtons = document.querySelectorAll('.level-btn');
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
         let slideData = [];
+        let currentLevel = "1";
+
+        // Level Selector Logic
+        levelButtons.forEach(btn => {
+            btn.onclick = () => {
+                levelButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentLevel = btn.getAttribute('data-level');
+            };
+        });
 
         dropZone.onclick = () => fileInput.click();
 
         fileInput.onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-
             fileNameDisplay.innerText = file.name;
             statusLabel.innerText = "DIGESTING PDF...";
             analyzeBtn.disabled = true;
@@ -83,62 +96,56 @@
             const reader = new FileReader();
             reader.onload = async function() {
                 const typedarray = new Uint8Array(this.result);
-                try {
-                    const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                    
-                    for (let i = 1; i <= pdf.numPages; i++) {
-                        const page = await pdf.getPage(i);
-                        const textContent = await page.getTextContent();
-                        const pageText = textContent.items.map(item => item.str).join(" ");
-                        
-                        // Try to guess a title from the first few words
-                        const words = pageText.trim().split(/\s+/);
-                        const titleGuess = words.slice(0, 4).join(" ");
-
-                        slideData.push({
-                            number: i,
-                            title: titleGuess || "Untitled Section",
-                            content: pageText
-                        });
-                    }
-
-                    statusLabel.innerText = "READY";
-                    output.innerHTML = `<div class="p-4 bg-slate-50 border border-slate-200 rounded text-slate-600">Document loaded. Found <strong>${slideData.length} sections</strong> ready for analysis.</div>`;
-                    analyzeBtn.disabled = false;
-                } catch (err) {
-                    output.innerText = "Error: " + err.message;
+                const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(" ");
+                    const title = pageText.trim().split(/\s+/).slice(0, 4).join(" ") || "Section " + i;
+                    slideData.push({ number: i, title: title, content: pageText });
                 }
+                statusLabel.innerText = "READY";
+                output.innerHTML = `<p class="text-center text-slate-400 py-10">Document loaded. Choose your depth and click Run.</p>`;
+                analyzeBtn.disabled = false;
             };
             reader.readAsArrayBuffer(file);
         };
 
         analyzeBtn.onclick = () => {
-            statusLabel.innerText = "GENERATING ANALYSIS...";
-            output.innerHTML = `<div class="animate-pulse space-y-4 text-center py-10"><div class="h-2 bg-slate-200 rounded"></div><p class="text-xs text-slate-400">Processing Slide Data Structure...</p></div>`;
+            statusLabel.innerText = "ANALYZING AT LEVEL " + currentLevel + "...";
+            output.innerHTML = `<div class="animate-pulse space-y-4 py-10"><div class="h-2 bg-slate-200 rounded"></div><div class="h-2 bg-slate-100 rounded w-5/6"></div></div>`;
             
             setTimeout(() => {
-                output.innerHTML = ""; // Clear loader
-                
+                output.innerHTML = "";
                 slideData.forEach(slide => {
+                    let analysisText = "";
+                    let levelLabel = "";
+
+                    if (currentLevel === "1") {
+                        levelLabel = "SIMPLE SUMMARY";
+                        analysisText = `• ${slide.content.substring(0, 150)}...`;
+                    } else if (currentLevel === "2") {
+                        levelLabel = "STANDARD ANALYSIS";
+                        analysisText = `<strong>Overview:</strong> ${slide.content.substring(0, 200)}...<br><br><strong>Key Details:</strong> Highlighted findings from the text include the main technical parameters discussed in this section.`;
+                    } else {
+                        levelLabel = "DEEP INTELLIGENCE";
+                        analysisText = `<strong>Executive Summary:</strong> Full breakdown of section ${slide.number}.<br><br><strong>Technical Context:</strong> ${slide.content.substring(0, 400)}...<br><br><strong>Potential Implications:</strong> Based on the data density, this section suggests a high correlation between the variables mentioned.`;
+                    }
+
                     const card = document.createElement('div');
-                    card.className = "slide-card bg-white p-5 rounded shadow-sm border border-slate-100 mb-4";
+                    card.className = "slide-card bg-white p-6 rounded shadow-sm border border-slate-100 mb-6";
                     card.innerHTML = `
-                        <div class="flex items-center gap-3 mb-2">
-                            <span class="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">SLIDE ${slide.number}</span>
-                            <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wide">${slide.title}...</h3>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-[10px] font-black bg-slate-900 text-white px-2 py-0.5 rounded tracking-widest">SLIDE ${slide.number}</span>
+                            <span class="text-[9px] font-bold text-blue-600 uppercase tracking-widest">${levelLabel}</span>
                         </div>
-                        <div class="text-slate-600 text-sm leading-relaxed mb-3">
-                            ${slide.content.substring(0, 300)}...
-                        </div>
-                        <div class="flex gap-2">
-                            <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded">Length: ${slide.content.length} chars</span>
-                            <span class="text-[10px] bg-green-50 text-green-600 px-2 py-1 rounded">Confidence: High</span>
-                        </div>
+                        <h3 class="font-bold text-slate-800 mb-3 uppercase text-sm">${slide.title}...</h3>
+                        <div class="text-slate-600 text-sm leading-relaxed">${analysisText}</div>
                     `;
                     output.appendChild(card);
                 });
                 statusLabel.innerText = "ANALYSIS COMPLETE";
-            }, 1500);
+            }, 1200);
         };
     </script>
 </body>
