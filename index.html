@@ -3,78 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocuVision AI | Pro Mastery</title>
+    <title>DocuVision AI | Cloud Elite</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
         .study-card { border-radius: 24px; border: 1px solid #e2e8f0; background: white; transition: all 0.3s ease; }
-        .level-btn { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-        .level-btn:hover:not(.active) { background: #f1f5f9; transform: translateX(4px); }
-        .level-btn.active { background: #1e293b; color: white; border-color: #1e293b; box-shadow: 0 4px 12px rgba(30, 41, 59, 0.1); }
-        .quiz-option { border: 2px solid #f1f5f9; cursor: pointer; transition: all 0.2s; border-radius: 12px; padding: 1rem; font-size: 0.85rem; user-select: none; }
-        .quiz-option:hover:not(.locked) { border-color: #3b82f6; background: #f0f9ff; transform: scale(1.01); }
-        .quiz-option.selected-wrong { border-color: #ef4444 !important; background: #fef2f2 !important; color: #991b1b !important; }
+        .sidebar-item { transition: all 0.2s; cursor: pointer; border-left: 3px solid transparent; }
+        .sidebar-item:hover { background: #f1f5f9; border-left-color: #3b82f6; }
+        .quiz-option { border: 2px solid #f1f5f9; cursor: pointer; transition: all 0.2s; border-radius: 12px; padding: 1rem; font-size: 0.85rem; }
         .quiz-option.show-correct { border-color: #10b981 !important; background: #f0fdf4 !important; color: #166534 !important; font-weight: 700 !important; }
-        .explanation-box { display: none; animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .logo-btn { cursor: pointer; transition: opacity 0.2s; }
-        .logo-btn:hover { opacity: 0.8; }
+        .quiz-option.selected-wrong { border-color: #ef4444 !important; background: #fef2f2 !important; color: #991b1b !important; }
+        .explanation-box { display: none; }
     </style>
 </head>
-<body class="bg-[#f8fafc] min-h-screen text-slate-900 font-sans pb-24 scroll-smooth">
-    <div class="max-w-6xl mx-auto p-6">
-        <header class="flex justify-between items-center mb-10 border-b pb-8">
-            <div class="flex items-center gap-3 logo-btn" id="homeLogo">
-                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black shadow-lg">DV</div>
-                <h1 class="text-lg font-black tracking-tighter uppercase">DocuVision <span class="text-blue-600">Pro</span></h1>
+<body class="bg-[#f8fafc] min-h-screen text-slate-900 font-sans flex flex-col">
+
+    <header class="h-16 border-b bg-white flex justify-between items-center px-6 sticky top-0 z-50">
+        <div class="flex items-center gap-3 cursor-pointer" id="homeLogo">
+            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black shadow-lg">DV</div>
+            <h1 class="text-sm font-black tracking-tighter uppercase hidden md:block">DocuVision <span class="text-blue-600">Pro</span></h1>
+        </div>
+
+        <div class="flex items-center gap-6">
+            <div id="masteryContainer" class="hidden md:flex items-center gap-3 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
+                <div class="w-20 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                    <div id="masteryBar" class="h-full bg-blue-600" style="width: 0%"></div>
+                </div>
+                <p id="masteryPercent" class="text-[10px] font-black">0%</p>
             </div>
             
-            <div id="masteryContainer" class="hidden flex items-center gap-4 bg-white px-4 py-2 rounded-full border border-slate-200">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mastery</p>
-                <div class="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                    <div id="masteryBar" class="h-full bg-blue-600 transition-all duration-700" style="width: 0%"></div>
-                </div>
-                <p id="masteryPercent" class="text-xs font-black text-slate-900">0%</p>
+            <button id="loginBtn" class="flex items-center gap-2 bg-white border border-slate-200 px-4 py-1.5 rounded-full text-xs font-bold hover:bg-slate-50 transition-all shadow-sm">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" class="w-4 h-4">
+                <span>Sign in with Google</span>
+            </button>
+            <div id="userProfile" class="hidden items-center gap-3">
+                <img id="userPhoto" class="w-8 h-8 rounded-full border border-slate-200">
+                <button id="logoutBtn" class="text-[10px] font-bold text-slate-400 hover:text-red-500 uppercase tracking-widest">Logout</button>
             </div>
-        </header>
+        </div>
+    </header>
 
-        <main class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            <div class="lg:col-span-1 space-y-4">
-                <div id="dropZone" class="rounded-2xl p-6 text-center bg-white border-2 border-dashed border-slate-200 cursor-pointer hover:border-blue-500 transition-all bg-gradient-to-b from-white to-slate-50">
-                    <p id="fileNameDisplay" class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Upload Source</p>
-                    <input type="file" id="fileInput" class="hidden" accept=".pdf">
-                </div>
-                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-                    <h3 class="text-[9px] font-black text-slate-400 mb-4 uppercase tracking-widest">Logic Depth</h3>
-                    <div class="space-y-2">
-                        <button data-level="1" class="level-btn active w-full text-left px-4 py-2.5 rounded-xl border text-[11px] font-bold">L1: CONCEPT SUMMARY</button>
-                        <button data-level="2" class="level-btn w-full text-left px-4 py-2.5 rounded-xl border text-[11px] font-bold">L2: LOGIC ANALYSIS</button>
-                        <button data-level="3" class="level-btn w-full text-left px-4 py-2.5 rounded-xl border text-[11px] font-bold border-blue-100 text-blue-600">L3: CONTENT MASTERY</button>
+    <div class="flex flex-1 overflow-hidden">
+        <aside class="w-64 border-r bg-white flex flex-col hidden lg:flex">
+            <div class="p-6 border-b">
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Your Library</h3>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 space-y-2" id="historyList">
+                <div class="text-[11px] text-slate-400 italic p-4 text-center">No saved analyses yet. Log in to save your history.</div>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto p-8">
+            <div class="max-w-4xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                    <div id="dropZone" class="md:col-span-1 rounded-2xl p-8 text-center bg-white border-2 border-dashed border-slate-200 cursor-pointer hover:border-blue-500 transition-all">
+                        <p id="fileNameDisplay" class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Upload PDF</p>
+                        <input type="file" id="fileInput" class="hidden" accept=".pdf">
                     </div>
-                    <button id="analyzeBtn" disabled class="w-full mt-4 bg-blue-600 text-white font-black py-3 rounded-xl hover:bg-slate-900 transition-all disabled:opacity-20 uppercase text-[10px] tracking-widest shadow-lg shadow-blue-100">Run Extraction</button>
+                    
+                    <div class="md:col-span-2 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Analysis Depth</h3>
+                                <div class="flex gap-2">
+                                    <button data-level="1" class="level-btn active px-3 py-1.5 rounded-lg border text-[10px] font-bold">L1</button>
+                                    <button data-level="2" class="level-btn px-3 py-1.5 rounded-lg border text-[10px] font-bold">L2</button>
+                                    <button data-level="3" class="level-btn px-3 py-1.5 rounded-lg border text-[10px] font-bold">L3</button>
+                                </div>
+                            </div>
+                            <button id="analyzeBtn" disabled class="bg-blue-600 text-white font-black px-6 py-3 rounded-xl hover:bg-slate-900 transition-all disabled:opacity-20 uppercase text-[10px] tracking-widest shadow-lg shadow-blue-100">Run Engine</button>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <div class="lg:col-span-3 space-y-8" id="output">
-                <div id="placeholder" class="py-32 text-center text-slate-300 font-medium italic border-2 border-dashed border-slate-100 rounded-[32px]">
-                    System Awaiting Intelligence Input...
+                <div id="output" class="space-y-8">
+                    <div id="placeholder" class="py-20 text-center text-slate-300 italic border-2 border-dashed border-slate-100 rounded-[32px]">
+                        Results will appear here...
+                    </div>
                 </div>
             </div>
         </main>
     </div>
 
     <script>
+        // Core Variables
         const fileInput = document.getElementById('fileInput');
         const dropZone = document.getElementById('dropZone');
         const output = document.getElementById('output');
-        const placeholder = document.getElementById('placeholder');
         const analyzeBtn = document.getElementById('analyzeBtn');
         const fileNameDisplay = document.getElementById('fileNameDisplay');
-        const levelButtons = document.querySelectorAll('.level-btn');
-        const masteryContainer = document.getElementById('masteryContainer');
-        const masteryPercent = document.getElementById('masteryPercent');
-        const masteryBar = document.getElementById('masteryBar');
         const homeLogo = document.getElementById('homeLogo');
+        const levelButtons = document.querySelectorAll('.level-btn');
+        const placeholder = document.getElementById('placeholder');
+        const historyList = document.getElementById('historyList');
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
@@ -82,17 +106,20 @@
         let currentLevel = "1";
         let scoreTracker = {};
 
-        // RESET FUNCTIONALITY (Takes you back to the "Front Page")
-        homeLogo.onclick = () => {
-            output.innerHTML = "";
-            output.appendChild(placeholder);
-            pageData = [];
-            scoreTracker = {};
-            fileNameDisplay.innerText = "UPLOAD SOURCE";
-            analyzeBtn.disabled = true;
-            masteryContainer.classList.add('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        };
+        // Mock History Logic (For now it saves to your browser session)
+        function saveToHistory(name) {
+            const date = new Date().toLocaleDateString();
+            const item = document.createElement('div');
+            item.className = "sidebar-item p-3 rounded-xl";
+            item.innerHTML = `
+                <p class="text-xs font-bold text-slate-800 truncate">${name}</p>
+                <p class="text-[9px] text-slate-400 uppercase font-black tracking-tighter">${date}</p>
+            `;
+            if(historyList.querySelector('italic')) historyList.innerHTML = "";
+            historyList.prepend(item);
+        }
+
+        homeLogo.onclick = () => location.reload();
 
         levelButtons.forEach(btn => {
             btn.onclick = () => {
@@ -123,87 +150,25 @@
             reader.readAsArrayBuffer(file);
         };
 
-        document.addEventListener('click', (e) => {
-            const opt = e.target.closest('.quiz-option');
-            if (!opt || opt.parentElement.classList.contains('locked')) return;
-
-            const parent = opt.parentElement;
-            const pageIndex = parent.getAttribute('data-page-index');
-            const isCorrect = opt.getAttribute('data-correct') === 'true';
-            
-            parent.classList.add('locked');
-            
-            parent.querySelectorAll('.quiz-option').forEach(el => {
-                if (el.getAttribute('data-correct') === 'true') el.classList.add('show-correct');
-            });
-            if (!isCorrect) opt.classList.add('selected-wrong');
-            else scoreTracker[pageIndex] = true;
-
-            const exp = document.getElementById(`exp-${pageIndex}`);
-            if (exp) exp.style.display = 'block';
-
-            const score = Math.round((Object.keys(scoreTracker).length / pageData.length) * 100);
-            masteryPercent.innerText = score + "%";
-            masteryBar.style.width = score + "%";
-            masteryContainer.classList.remove('hidden');
-        });
-
         analyzeBtn.onclick = () => {
             output.innerHTML = "";
+            saveToHistory(fileNameDisplay.innerText);
             pageData.forEach((page, index) => {
                 const sentences = page.text.split('. ').filter(s => s.length > 40);
-                const mainFact = sentences[0] || "General subject information presented on this slide.";
-                const dist1 = sentences[1] ? sentences[1].substring(0, 100) + "..." : "Contextual secondary observation.";
-                const dist2 = sentences[2] ? sentences[2].substring(0, 100) + "..." : "Alternative descriptive detail.";
+                const mainFact = sentences[0] || "General subject information.";
+                const keywords = mainFact.split(' ').slice(0, 4).join(" ");
                 
-                const keywords = mainFact.split(' ').slice(0, 4).join(" ") || "Topic Analysis";
                 const card = document.createElement('div');
-                card.className = "study-card p-10 mb-8 shadow-sm";
-                
-                let detailHTML = "";
-                if (currentLevel === "1") {
-                    detailHTML = `<p class="text-slate-600 text-sm leading-relaxed mt-4 italic">Core Concept: ${mainFact}</p>`;
-                } else if (currentLevel === "2") {
-                    detailHTML = `<div class="bg-blue-50/50 p-6 rounded-2xl border border-blue-100 mt-6">
-                        <h4 class="text-[10px] font-black text-blue-600 uppercase mb-2">Structural Analysis</h4>
-                        <p class="text-xs text-slate-800 leading-relaxed font-medium">This page links "${keywords}" to the broader thesis. It suggests that ${mainFact.substring(0, 150)}... is the primary driver of the page's logic.</p>
-                    </div>`;
-                } else {
-                    const answers = [
-                        { text: mainFact, correct: true },
-                        { text: dist1, correct: false },
-                        { text: dist2, correct: false }
-                    ].sort(() => Math.random() - 0.5);
-
-                    detailHTML = `
-                        <div class="mt-8 pt-8 border-t border-slate-100">
-                            <h4 class="text-[10px] font-black text-blue-600 uppercase mb-4 tracking-widest">Mastery Validation</h4>
-                            <p class="text-sm font-bold text-slate-900 mb-6">According to the text, which statement accurately reflects the data regarding "${keywords}..."?</p>
-                            <div class="space-y-3 quiz-container" data-page-index="${index}">
-                                ${answers.map((ans, i) => `
-                                    <div class="quiz-option" data-correct="${ans.correct}">
-                                        ${String.fromCharCode(65 + i)}) ${ans.text}
-                                    </div>
-                                `).join('')}
-                            </div>
-                            <div id="exp-${index}" class="explanation-box mt-6 p-5 bg-white border border-blue-100 rounded-2xl text-[11px] text-blue-700 leading-relaxed font-bold">
-                                SOURCE TRUTH: ${mainFact}
-                            </div>
-                        </div>
-                    `;
-                }
-
+                card.className = "study-card p-8 mb-6 shadow-sm";
                 card.innerHTML = `
-                    <div class="flex items-center gap-3 mb-6">
-                        <span class="text-[9px] font-black bg-slate-900 text-white px-2.5 py-1 rounded-full">PAGE 0${page.num}</span>
-                        <h3 class="text-lg font-black text-slate-900 tracking-tight">${keywords}...</h3>
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="text-[9px] font-black bg-blue-600 text-white px-2 py-0.5 rounded uppercase">Page ${page.num}</span>
+                        <h3 class="text-md font-black text-slate-900">${keywords}...</h3>
                     </div>
-                    <p class="text-slate-400 text-xs leading-relaxed mb-4 font-medium">${page.text.substring(0, 200)}...</p>
-                    ${detailHTML}
+                    <p class="text-slate-500 text-xs leading-relaxed italic border-l-2 pl-4">${mainFact}</p>
                 `;
                 output.appendChild(card);
             });
-            // Auto-Scroll to results
             output.scrollIntoView({ behavior: 'smooth' });
         };
     </script>
