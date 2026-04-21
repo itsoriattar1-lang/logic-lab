@@ -3,53 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocuVision AI | Academic Intelligence</title>
+    <title>DocuVision AI | Prep & Quiz</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
-        .drop-zone { border: 2px dashed #3b82f6; }
         .study-card { border-radius: 16px; border: 1px solid #e2e8f0; background: white; transition: all 0.3s ease; }
-        .study-card:hover { border-color: #3b82f6; box-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.1); }
         .level-btn.active { background-color: #2563eb; color: white; border-color: #2563eb; }
+        .quiz-option { border: 2px solid #f1f5f9; cursor: pointer; transition: all 0.2s; }
+        .quiz-option:hover { border-color: #3b82f6; background: #eff6ff; }
+        .quiz-option.correct { border-color: #10b981; background: #ecfdf5; }
+        .quiz-option.wrong { border-color: #ef4444; background: #fef2f2; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
+<body class="bg-slate-50 min-h-screen text-slate-800 font-sans pb-20">
     <div class="max-w-6xl mx-auto p-6">
         <header class="flex justify-between items-center mb-8 border-b pb-6">
             <div>
                 <h1 class="text-2xl font-black text-slate-900 tracking-tight italic">DOCU<span class="text-blue-600 not-italic">VISION</span></h1>
-                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em]">Neural Study Matrix v4.0</p>
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em]">Neural Test Prep Matrix</p>
             </div>
-            <div class="flex items-center gap-3">
-                <span class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-                <span class="text-[10px] font-black text-slate-600 uppercase tracking-widest">Logic Engine: Active</span>
-            </div>
+            <div id="quizScore" class="hidden px-4 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold">Prep Score: 0%</div>
         </header>
 
         <main class="grid grid-cols-1 lg:grid-cols-4 gap-8">
             <div class="lg:col-span-1 space-y-4">
-                <div id="dropZone" class="drop-zone rounded-2xl p-8 text-center bg-white shadow-sm cursor-pointer hover:bg-blue-50/50 transition-all border-slate-200">
-                    <p id="fileNameDisplay" class="text-[11px] font-black text-blue-500 uppercase tracking-widest">Load Source PDF</p>
+                <div id="dropZone" class="rounded-2xl p-6 text-center bg-white shadow-sm border-2 border-dashed border-slate-200 cursor-pointer">
+                    <p id="fileNameDisplay" class="text-[10px] font-black text-blue-500 uppercase tracking-widest">Load Source PDF</p>
                     <input type="file" id="fileInput" class="hidden" accept=".pdf">
                 </div>
 
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
-                    <h3 class="text-[10px] font-black text-slate-400 mb-4 tracking-widest uppercase">Analysis Mode</h3>
-                    <div class="space-y-2" id="levelSelector">
-                        <button data-level="1" class="level-btn active w-full text-left px-4 py-3 rounded-xl border text-xs font-bold transition-all">CONCEPT SUMMARY</button>
-                        <button data-level="2" class="level-btn w-full text-left px-4 py-3 rounded-xl border text-xs font-bold transition-all">LOGIC BREAKDOWN</button>
-                        <button data-level="3" class="level-btn w-full text-left px-4 py-3 rounded-xl border text-xs font-bold transition-all">TEST PREP MODE</button>
+                    <h3 class="text-[10px] font-black text-slate-400 mb-4 uppercase tracking-widest">Select Mode</h3>
+                    <div class="space-y-2">
+                        <button data-level="1" class="level-btn active w-full text-left px-4 py-3 rounded-xl border text-xs font-bold">QUICK SCAN</button>
+                        <button data-level="3" class="level-btn w-full text-left px-4 py-3 rounded-xl border text-xs font-bold border-amber-200 text-amber-600">TEST PREP + QUIZ</button>
                     </div>
                 </div>
 
                 <button id="analyzeBtn" disabled class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl hover:bg-blue-600 transition-all disabled:opacity-20 uppercase text-[11px] tracking-[0.2em]">
-                    Execute Intelligence Scan
+                    Run Analysis
                 </button>
             </div>
 
             <div class="lg:col-span-3 space-y-8" id="output">
-                <div class="text-center py-32 border-2 border-dashed border-slate-200 rounded-3xl bg-white/50">
-                    <p class="text-slate-400 font-medium text-sm">Awaiting document for neural processing...</p>
+                <div class="text-center py-32 border-2 border-dashed border-slate-200 rounded-3xl bg-white/50 text-slate-400">
+                    Load a document to generate your study suite.
                 </div>
             </div>
         </main>
@@ -62,11 +60,13 @@
         const analyzeBtn = document.getElementById('analyzeBtn');
         const fileNameDisplay = document.getElementById('fileNameDisplay');
         const levelButtons = document.querySelectorAll('.level-btn');
+        const quizScoreDisplay = document.getElementById('quizScore');
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
         let pageData = [];
         let currentLevel = "1";
+        let quizAnswers = {};
 
         levelButtons.forEach(btn => {
             btn.onclick = () => {
@@ -82,94 +82,81 @@
             const file = e.target.files[0];
             if (!file) return;
             fileNameDisplay.innerText = file.name.toUpperCase();
-            analyzeBtn.disabled = true;
-            pageData = [];
-
             const reader = new FileReader();
             reader.onload = async function() {
                 const typedarray = new Uint8Array(this.result);
                 const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                pageData = [];
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
                     const textContent = await page.getTextContent();
-                    const text = textContent.items.map(item => item.str).join(" ");
-                    pageData.push({ num: i, rawText: text });
+                    pageData.push({ num: i, text: textContent.items.map(item => item.str).join(" ") });
                 }
                 analyzeBtn.disabled = false;
-                output.innerHTML = `<div class="bg-blue-600 text-white p-4 rounded-xl text-center text-[10px] font-black tracking-[0.3em]">SCAN COMPLETE: ${pageData.length} PAGES BUFFERED</div>`;
             };
             reader.readAsArrayBuffer(file);
         };
 
-        // THE REFINEMENT ENGINE (This simulates the "Common Sense")
-        function refineContent(text, level) {
-            // Logic to strip out "Noise" like Page 1, Name:, Date:, etc.
-            const noisePatterns = [/Page \d+/gi, /Name: _+/gi, /Date: _+/gi, /Instructor: .+/gi];
-            let cleaned = text;
-            noisePatterns.forEach(pattern => cleaned = cleaned.replace(pattern, ""));
-
-            // Simulation of AI Intelligence until we connect the API
-            const words = cleaned.trim().split(/\s+/);
-            const mainTopic = words.slice(0, 3).join(" ");
-            
-            if (level === "1") {
-                return {
-                    summary: `This section focuses on ${mainTopic}. It establishes the foundational concepts needed to understand the rest of the document.`,
-                    insight: `Focus on the definitions provided here. They are the building blocks for the technical parts later on.`,
-                    data: ["Core Definition", "Primary Concept"]
-                };
-            } else if (level === "2") {
-                return {
-                    summary: `A logical deep-dive into ${mainTopic}. This isn't just text; it's a structural argument for why this system works.`,
-                    insight: `The author uses ${words[10] || 'specific data'} to prove their point. Notice how this connects to the previous section.`,
-                    data: ["Logical Chain", "Evidence Type", "Supporting Argument"]
-                };
-            } else {
-                return {
-                    summary: `TEST PREP: Expect questions on how ${mainTopic} affects the overall outcome.`,
-                    insight: `This is a high-probability test area. Don't just read it—understand the 'Why' behind the ${words[5] || 'concepts'}.`,
-                    data: ["Exam-Critical Fact", "Possible Test Question", "Comparison Point"]
-                };
-            }
+        function generateQuiz(pageIndex, topic) {
+            return `
+                <div class="mt-6 p-6 bg-slate-50 rounded-xl border border-slate-200">
+                    <p class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Practice Quiz: ${topic}</p>
+                    <p class="text-sm font-bold text-slate-800 mb-4">Based on this section, what is the most critical factor to remember for the exam?</p>
+                    <div class="space-y-2">
+                        <div class="quiz-option p-3 rounded-lg text-sm" onclick="checkAnswer(this, true, ${pageIndex})">A) The primary structural mechanism of ${topic}</div>
+                        <div class="quiz-option p-3 rounded-lg text-sm" onclick="checkAnswer(this, false, ${pageIndex})">B) A minor detail about the date of the document</div>
+                        <div class="quiz-option p-3 rounded-lg text-sm" onclick="checkAnswer(this, false, ${pageIndex})">C) The names of the secondary contributors</div>
+                    </div>
+                </div>
+            `;
         }
 
+        window.checkAnswer = (el, isCorrect, id) => {
+            if (el.parentElement.classList.contains('locked')) return;
+            el.classList.add(isCorrect ? 'correct' : 'wrong');
+            el.parentElement.classList.add('locked');
+            quizAnswers[id] = isCorrect;
+            const score = Math.round((Object.values(quizAnswers).filter(v => v).length / pageData.length) * 100);
+            quizScoreDisplay.innerText = `Prep Score: ${score}%`;
+            quizScoreDisplay.classList.remove('hidden');
+        };
+
         analyzeBtn.onclick = () => {
-            output.innerHTML = `<div class="text-center py-20"><div class="animate-ping h-8 w-8 rounded-full bg-blue-400 mx-auto opacity-75"></div><p class="text-[10px] font-black text-slate-400 mt-8 tracking-widest uppercase">Synthesizing Neural Insights...</p></div>`;
-            
-            setTimeout(() => {
-                output.innerHTML = "";
-                pageData.forEach(page => {
-                    const intelligence = refineContent(page.rawText, currentLevel);
-                    const card = document.createElement('div');
-                    card.className = "study-card mb-8 shadow-sm overflow-hidden";
-                    card.innerHTML = `
-                        <div class="bg-slate-50 border-b p-4 flex justify-between items-center">
-                            <span class="text-[10px] font-black text-slate-900 tracking-[0.2em]">SECTION 0${page.num}</span>
-                            <span class="text-[9px] font-bold text-blue-600 uppercase tracking-widest">Scan Confidence: 98%</span>
-                        </div>
-                        <div class="p-8 space-y-8">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div>
-                                    <h4 class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-3">⚡ Neural Summary</h4>
-                                    <p class="text-slate-700 text-sm font-semibold leading-relaxed">${intelligence.summary}</p>
-                                </div>
-                                <div>
-                                    <h4 class="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-3">🧠 Study Insight</h4>
-                                    <p class="text-slate-600 text-sm leading-relaxed italic border-l-2 border-amber-200 pl-4">${intelligence.insight}</p>
-                                </div>
+            output.innerHTML = "";
+            pageData.forEach((page, index) => {
+                const words = page.text.trim().split(/\s+/);
+                const topic = words.slice(0, 3).join(" ") || "General Topic";
+                
+                const card = document.createElement('div');
+                card.className = "study-card mb-8 shadow-sm overflow-hidden p-8";
+                
+                let modeHTML = "";
+                if (currentLevel === "3") {
+                    modeHTML = `
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                            <div class="p-4 bg-amber-50 rounded-xl border border-amber-100">
+                                <h4 class="text-[10px] font-black text-amber-600 uppercase mb-2">🔥 Exam Focus</h4>
+                                <p class="text-xs text-slate-700 leading-relaxed font-bold">This section is vital for understanding ${topic}. Expect questions regarding the causal link between these variables.</p>
                             </div>
-                            
-                            <div class="pt-6 border-t border-slate-50">
-                                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">📍 Critical Takeaways</h4>
-                                <div class="flex flex-wrap gap-2">
-                                    ${intelligence.data.map(d => `<span class="bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-slate-200">${d}</span>`).join('')}
-                                </div>
+                            <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                                <h4 class="text-[10px] font-black text-blue-600 uppercase mb-2">💡 Key Takeaway</h4>
+                                <p class="text-xs text-slate-600 leading-relaxed italic">Refine your study here by focusing on the "How" rather than the "What."</p>
                             </div>
                         </div>
+                        ${generateQuiz(index, topic)}
                     `;
-                    output.appendChild(card);
-                });
-            }, 1500);
+                }
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-6">
+                        <span class="text-[10px] font-black bg-slate-900 text-white px-2 py-1 rounded">SECTION ${page.num}</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-4">${topic}...</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed mb-8">${page.text.substring(0, 300)}...</p>
+                    ${modeHTML}
+                `;
+                output.appendChild(card);
+            });
         };
     </script>
 </body>
