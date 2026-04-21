@@ -3,27 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocuVision AI | Knowledge Probe</title>
+    <title>DocuVision AI | Elite Analyzer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
         .study-card { border-radius: 24px; border: 1px solid #e2e8f0; background: white; transition: all 0.3s ease; }
-        .quiz-option { border: 2px solid #f1f5f9; cursor: pointer; transition: all 0.2s; border-radius: 12px; padding: 1rem; font-size: 0.85rem; font-weight: 500; }
+        .level-btn.active { background: #1e293b; color: white; border-color: #1e293b; }
+        .quiz-option { border: 2px solid #f1f5f9; cursor: pointer; transition: all 0.2s; border-radius: 12px; padding: 1rem; font-size: 0.85rem; }
         .quiz-option:hover:not(.locked) { border-color: #3b82f6; background: #f0f9ff; }
         .quiz-option.selected-wrong { border-color: #ef4444; background: #fef2f2; color: #991b1b; }
         .quiz-option.show-correct { border-color: #10b981; background: #f0fdf4; color: #166534; font-weight: 700; }
-        .explanation-box { animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .explanation-box { animation: fadeIn 0.4s ease-out; display: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="bg-[#fcfdfe] min-h-screen text-slate-900 font-sans pb-24">
-    <div class="max-w-5xl mx-auto p-6">
+<body class="bg-[#f8fafc] min-h-screen text-slate-900 font-sans pb-24">
+    <div class="max-w-6xl mx-auto p-6">
         <header class="flex justify-between items-center mb-10 border-b pb-8">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black italic shadow-lg">DV</div>
-                <h1 class="text-lg font-black tracking-tighter uppercase">DocuVision <span class="text-blue-600">Pro</span></h1>
+                <h1 class="text-lg font-black tracking-tighter uppercase">DocuVision <span class="text-blue-600">Elite</span></h1>
             </div>
-            <div id="masteryContainer" class="hidden flex items-center gap-4">
+            <div id="masteryContainer" class="hidden flex items-center gap-4 bg-white px-4 py-2 rounded-full border border-slate-200">
                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mastery</p>
                 <div class="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                     <div id="masteryBar" class="h-full bg-blue-600 transition-all duration-1000" style="width: 0%"></div>
@@ -35,21 +36,22 @@
         <main class="grid grid-cols-1 lg:grid-cols-4 gap-8">
             <div class="lg:col-span-1 space-y-4">
                 <div id="dropZone" class="rounded-2xl p-6 text-center bg-white border-2 border-dashed border-slate-200 cursor-pointer hover:border-blue-500 transition-all">
-                    <p id="fileNameDisplay" class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Upload PDF</p>
+                    <p id="fileNameDisplay" class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Upload Source</p>
                     <input type="file" id="fileInput" class="hidden" accept=".pdf">
                 </div>
                 <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-                    <h3 class="text-[9px] font-black text-slate-400 mb-4 uppercase tracking-widest">Analysis Depth</h3>
+                    <h3 class="text-[9px] font-black text-slate-400 mb-4 uppercase tracking-widest">Analysis Level</h3>
                     <div class="space-y-2">
-                        <button data-level="1" class="level-btn active w-full text-left px-4 py-2.5 rounded-xl border text-[11px] font-bold">L1: SUMMARY</button>
-                        <button data-level="3" class="level-btn w-full text-left px-4 py-2.5 rounded-xl border text-[11px] font-bold border-blue-100 text-blue-600">L3: CONTENT QUIZ</button>
+                        <button data-level="1" class="level-btn active w-full text-left px-4 py-2.5 rounded-xl border text-[11px] font-bold">L1: CONCEPT SUMMARY</button>
+                        <button data-level="2" class="level-btn w-full text-left px-4 py-2.5 rounded-xl border text-[11px] font-bold">L2: LOGIC ANALYSIS</button>
+                        <button data-level="3" class="level-btn w-full text-left px-4 py-2.5 rounded-xl border text-[11px] font-bold border-blue-100 text-blue-600">L3: CONTENT MASTERY</button>
                     </div>
-                    <button id="analyzeBtn" disabled class="w-full mt-4 bg-blue-600 text-white font-black py-3 rounded-xl hover:bg-slate-900 transition-all disabled:opacity-20 uppercase text-[10px] tracking-widest">Run Intelligence</button>
+                    <button id="analyzeBtn" disabled class="w-full mt-4 bg-blue-600 text-white font-black py-3 rounded-xl hover:bg-slate-900 transition-all disabled:opacity-20 uppercase text-[10px] tracking-widest shadow-lg shadow-blue-100">Execute Engine</button>
                 </div>
             </div>
 
             <div class="lg:col-span-3 space-y-8" id="output">
-                <div class="py-32 text-center text-slate-300 font-medium italic">Awaiting source material...</div>
+                <div class="py-32 text-center text-slate-300 font-medium italic border-2 border-dashed border-slate-100 rounded-[32px]">Initialize source for deep scanning...</div>
             </div>
         </main>
     </div>
@@ -114,7 +116,7 @@
             else scoreTracker[id] = true;
 
             const exp = document.getElementById(`exp-${id}`);
-            exp.innerHTML = `<strong>Source Knowledge:</strong> ${explanation}`;
+            exp.innerHTML = `<strong>Source Truth:</strong> ${explanation}`;
             exp.style.display = 'block';
 
             const score = Math.round((Object.keys(scoreTracker).length / pageData.length) * 100);
@@ -126,38 +128,54 @@
         analyzeBtn.onclick = () => {
             output.innerHTML = "";
             pageData.forEach((page, index) => {
-                // CONTENT EXTRACTION ENGINE
-                const rawLines = page.text.split('. ').filter(l => l.length > 20);
-                const keyFactLine = rawLines[1] || rawLines[0] || "General information";
-                const keywords = keyFactLine.split(' ').slice(0, 3).join(" ");
+                const sentences = page.text.split('. ').filter(s => s.length > 30);
+                const mainFact = sentences[0] || "General subject matter content.";
+                const distractor1 = sentences[1] ? sentences[1].substring(0, 70) + "..." : "Alternative contextual interpretation.";
+                const distractor2 = sentences[2] ? sentences[2].substring(0, 70) + "..." : "Secondary descriptive element.";
+                
+                const keywords = mainFact.split(' ').slice(0, 4).join(" ");
                 
                 const card = document.createElement('div');
                 card.className = "study-card p-10 mb-8 shadow-sm";
                 
                 let modeHTML = "";
-                if (currentLevel === "3") {
+                if (currentLevel === "1") {
+                    modeHTML = `<p class="text-slate-600 text-sm leading-relaxed mt-4"><strong>Key Concept:</strong> This section establishes the primary definitions for ${keywords}. Focus on how these terms set the foundation for the upcoming analysis.</p>`;
+                } else if (currentLevel === "2") {
+                    modeHTML = `<div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 mt-4">
+                        <h4 class="text-[10px] font-black text-slate-400 uppercase mb-2">Logic Architecture</h4>
+                        <p class="text-xs text-slate-700 leading-relaxed italic">"The document connects ${keywords} to the overall outcome by asserting that ${mainFact.substring(0, 100)}..."</p>
+                    </div>`;
+                } else {
+                    // RANDOMIZE ANSWER ORDER
+                    const answers = [
+                        { text: mainFact, correct: true },
+                        { text: distractor1, correct: false },
+                        { text: distractor2, correct: false }
+                    ].sort(() => Math.random() - 0.5);
+
                     modeHTML = `
-                        <div class="mt-8 pt-8 border-t border-slate-50">
-                            <h4 class="text-[10px] font-black text-blue-600 uppercase mb-6 tracking-[0.2em]">Knowledge Validation</h4>
-                            <div class="bg-slate-50 p-8 rounded-3xl border border-slate-100">
-                                <p class="text-sm font-bold text-slate-800 mb-6 leading-relaxed">According to the text, what is the significance or detail provided regarding "${keywords}..."?</p>
-                                <div class="space-y-3">
-                                    <div class="quiz-option" data-correct="true" onclick="submitQuiz(this, true, ${index}, '${keyFactLine.replace(/'/g, "\\'")}')">A) ${keyFactLine.substring(0, 80)}...</div>
-                                    <div class="quiz-option" data-correct="false" onclick="submitQuiz(this, false, ${index}, '${keyFactLine.replace(/'/g, "\\'")}')">B) It is mentioned as a negligible factor with no specific detail provided.</div>
-                                    <div class="quiz-option" data-correct="false" onclick="submitQuiz(this, false, ${index}, '${keyFactLine.replace(/'/g, "\\'")}')">C) The text suggests the opposite of this primary statement.</div>
-                                </div>
-                                <div id="exp-${index}" class="explanation-box mt-6 p-5 bg-white border border-blue-100 rounded-2xl text-[11px] text-blue-800 leading-relaxed font-medium hidden"></div>
+                        <div class="mt-8 pt-8 border-t border-slate-100">
+                            <h4 class="text-[10px] font-black text-blue-600 uppercase mb-4 tracking-widest">Knowledge Check</h4>
+                            <p class="text-sm font-bold text-slate-800 mb-6 italic">Based on the text, what is the specific detail provided regarding "${keywords}..."?</p>
+                            <div class="space-y-3">
+                                ${answers.map((ans, i) => `
+                                    <div class="quiz-option" data-correct="${ans.correct}" onclick="submitQuiz(this, ${ans.correct}, ${index}, '${mainFact.replace(/'/g, "\\'")}')">
+                                        ${String.fromCharCode(65 + i)}) ${ans.text}
+                                    </div>
+                                `).join('')}
                             </div>
+                            <div id="exp-${index}" class="explanation-box mt-6 p-5 bg-white border border-blue-100 rounded-2xl text-[11px] text-blue-800 leading-relaxed font-medium"></div>
                         </div>
                     `;
                 }
 
                 card.innerHTML = `
-                    <div class="flex justify-between items-center mb-6">
-                        <span class="text-[9px] font-black bg-blue-50 text-blue-600 px-3 py-1 rounded-full uppercase tracking-tighter">Page ${page.num}</span>
+                    <div class="flex items-center gap-3 mb-6">
+                        <span class="text-[9px] font-black bg-blue-600 text-white px-2 py-0.5 rounded">PAGE 0${page.num}</span>
+                        <h3 class="text-lg font-black text-slate-900">${keywords}...</h3>
                     </div>
-                    <h3 class="text-xl font-black text-slate-900 mb-4 tracking-tight">${keywords}...</h3>
-                    <p class="text-slate-500 text-xs leading-relaxed mb-6 italic border-l-2 border-slate-100 pl-4">${page.text.substring(0, 300)}...</p>
+                    <p class="text-slate-500 text-xs leading-relaxed mb-4">${page.text.substring(0, 250)}...</p>
                     ${modeHTML}
                 `;
                 output.appendChild(card);
