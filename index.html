@@ -3,57 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocuVision AI | PDF Intelligence</title>
+    <title>DocuVision AI | Study Companion</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
-        .drop-zone { border: 2px dashed #3b82f6; transition: all 0.3s ease; }
-        .slide-card { border-left: 4px solid #3b82f6; }
-        .level-btn.active { background-color: #1e293b; color: white; border-color: #1e293b; }
+        .drop-zone { border: 2px dashed #3b82f6; }
+        .section-card { border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
+        .level-btn.active { background-color: #2563eb; color: white; border-color: #2563eb; }
+        .takeaway-pill { background: #f0f9ff; border: 1px solid #e0f2fe; color: #0369a1; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
     <div class="max-w-6xl mx-auto p-6">
-        <header class="flex justify-between items-center mb-10 border-b pb-6">
+        <header class="flex justify-between items-center mb-8 border-b pb-6">
             <div>
-                <h1 class="text-2xl font-bold text-slate-900 tracking-tight">DocuVision <span class="text-blue-600">AI</span></h1>
-                <p class="text-sm text-slate-500 font-medium">Multi-Level Document Intelligence</p>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight">DocuVision <span class="text-blue-600 font-extrabold">STUDY</span></h1>
+                <p class="text-sm text-slate-500 font-medium tracking-tight">Academic Intelligence & Document Analysis</p>
             </div>
-            <div id="systemStatus" class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-bold uppercase">System: Online</div>
+            <div class="px-3 py-1 bg-blue-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-200">AI Core Active</div>
         </header>
 
         <main class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            <div class="lg:col-span-1 space-y-6">
-                <div id="dropZone" class="drop-zone rounded-xl p-6 text-center bg-white shadow-sm cursor-pointer hover:bg-blue-50 transition-colors">
-                    <p id="fileNameDisplay" class="font-bold text-slate-700 text-xs uppercase tracking-widest">Drop PDF Here</p>
+            <div class="lg:col-span-1 space-y-4">
+                <div id="dropZone" class="drop-zone rounded-2xl p-6 text-center bg-white shadow-sm cursor-pointer hover:border-blue-400 transition-all">
+                    <p id="fileNameDisplay" class="font-bold text-slate-400 text-[10px] uppercase tracking-widest">Select PDF Document</p>
                     <input type="file" id="fileInput" class="hidden" accept=".pdf">
                 </div>
 
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                    <h3 class="text-xs font-black uppercase text-slate-400 mb-4 tracking-widest">Analysis Depth</h3>
-                    <div class="flex flex-col gap-2" id="levelSelector">
-                        <button data-level="1" class="level-btn active w-full text-left px-4 py-2 rounded-lg border text-sm font-medium transition-all hover:bg-slate-50">Level 1: Simple</button>
-                        <button data-level="2" class="level-btn w-full text-left px-4 py-2 rounded-lg border text-sm font-medium transition-all hover:bg-slate-50">Level 2: Standard</button>
-                        <button data-level="3" class="level-btn w-full text-left px-4 py-2 rounded-lg border text-sm font-medium transition-all hover:bg-slate-50">Level 3: Deep Dive</button>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                    <h3 class="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-[0.2em]">Study Intensity</h3>
+                    <div class="space-y-2" id="levelSelector">
+                        <button data-level="1" class="level-btn active w-full text-left px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all">Quick Review</button>
+                        <button data-level="2" class="level-btn w-full text-left px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all">Standard Study</button>
+                        <button data-level="3" class="level-btn w-full text-left px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all">Exam Prep (Deep Dive)</button>
                     </div>
                 </div>
 
-                <button id="analyzeBtn" disabled class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-blue-200 uppercase text-xs tracking-widest">
-                    Run AI Analysis
+                <button id="analyzeBtn" disabled class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl hover:bg-black transition-all disabled:opacity-20 shadow-xl uppercase text-[11px] tracking-widest">
+                    Generate Study Guide
                 </button>
             </div>
 
             <div class="lg:col-span-3 space-y-6">
-                <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 min-h-[600px]">
-                    <div class="flex items-center justify-between mb-8 border-b pb-4">
-                        <h2 class="text-lg font-black uppercase">Intelligence Output</h2>
-                        <div id="statusLabel" class="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-1 rounded">AWAITING INPUT</div>
-                    </div>
-                    <div id="output" class="space-y-6">
-                        <div class="text-slate-300 text-center py-20">
-                            <svg class="w-12 h-12 mx-auto mb-4 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            <p class="italic">Please upload a document to begin processing.</p>
+                <div id="output" class="space-y-8">
+                    <div class="bg-white p-12 rounded-3xl border border-dashed border-slate-200 text-center">
+                        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
                         </div>
+                        <h2 class="text-slate-400 font-medium">Ready to transform your PDF into a study guide.</h2>
                     </div>
                 </div>
             </div>
@@ -64,17 +61,15 @@
         const fileInput = document.getElementById('fileInput');
         const dropZone = document.getElementById('dropZone');
         const output = document.getElementById('output');
-        const statusLabel = document.getElementById('statusLabel');
         const analyzeBtn = document.getElementById('analyzeBtn');
         const fileNameDisplay = document.getElementById('fileNameDisplay');
         const levelButtons = document.querySelectorAll('.level-btn');
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-        let slideData = [];
+        let pageData = [];
         let currentLevel = "1";
 
-        // Level Selector Logic
         levelButtons.forEach(btn => {
             btn.onclick = () => {
                 levelButtons.forEach(b => b.classList.remove('active'));
@@ -88,10 +83,9 @@
         fileInput.onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            fileNameDisplay.innerText = file.name;
-            statusLabel.innerText = "DIGESTING PDF...";
+            fileNameDisplay.innerText = file.name.substring(0, 20) + "...";
             analyzeBtn.disabled = true;
-            slideData = [];
+            pageData = [];
 
             const reader = new FileReader();
             reader.onload = async function() {
@@ -100,52 +94,56 @@
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
                     const textContent = await page.getTextContent();
-                    const pageText = textContent.items.map(item => item.str).join(" ");
-                    const title = pageText.trim().split(/\s+/).slice(0, 4).join(" ") || "Section " + i;
-                    slideData.push({ number: i, title: title, content: pageText });
+                    const text = textContent.items.map(item => item.str).join(" ");
+                    const title = text.trim().split(/\s+/).slice(0, 5).join(" ") || "General Content";
+                    pageData.push({ num: i, title: title, content: text });
                 }
-                statusLabel.innerText = "READY";
-                output.innerHTML = `<p class="text-center text-slate-400 py-10">Document loaded. Choose your depth and click Run.</p>`;
                 analyzeBtn.disabled = false;
+                output.innerHTML = `<div class="bg-blue-50 text-blue-700 p-4 rounded-xl text-center text-sm font-bold tracking-tight">DOCUMENT DIGESTED: ${pageData.length} PAGES FOUND</div>`;
             };
             reader.readAsArrayBuffer(file);
         };
 
         analyzeBtn.onclick = () => {
-            statusLabel.innerText = "ANALYZING AT LEVEL " + currentLevel + "...";
-            output.innerHTML = `<div class="animate-pulse space-y-4 py-10"><div class="h-2 bg-slate-200 rounded"></div><div class="h-2 bg-slate-100 rounded w-5/6"></div></div>`;
+            output.innerHTML = `<div class="text-center py-20"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div><p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Synthesizing Study Modules...</p></div>`;
             
             setTimeout(() => {
                 output.innerHTML = "";
-                slideData.forEach(slide => {
-                    let analysisText = "";
-                    let levelLabel = "";
-
-                    if (currentLevel === "1") {
-                        levelLabel = "SIMPLE SUMMARY";
-                        analysisText = `• ${slide.content.substring(0, 150)}...`;
-                    } else if (currentLevel === "2") {
-                        levelLabel = "STANDARD ANALYSIS";
-                        analysisText = `<strong>Overview:</strong> ${slide.content.substring(0, 200)}...<br><br><strong>Key Details:</strong> Highlighted findings from the text include the main technical parameters discussed in this section.`;
-                    } else {
-                        levelLabel = "DEEP INTELLIGENCE";
-                        analysisText = `<strong>Executive Summary:</strong> Full breakdown of section ${slide.number}.<br><br><strong>Technical Context:</strong> ${slide.content.substring(0, 400)}...<br><br><strong>Potential Implications:</strong> Based on the data density, this section suggests a high correlation between the variables mentioned.`;
-                    }
-
+                pageData.forEach(page => {
                     const card = document.createElement('div');
-                    card.className = "slide-card bg-white p-6 rounded shadow-sm border border-slate-100 mb-6";
+                    card.className = "section-card bg-white shadow-sm border border-slate-200 mb-8";
+                    
+                    // Simple logic for simulation - this is where the AI brain will go
+                    let summary = `Page ${page.num} introduces the concept of "${page.title}" and discusses its primary framework.`;
+                    let takeaways = ["Main concept definition", "Core methodology used", "Primary data observation"];
+
                     card.innerHTML = `
-                        <div class="flex items-center justify-between mb-4">
-                            <span class="text-[10px] font-black bg-slate-900 text-white px-2 py-0.5 rounded tracking-widest">SLIDE ${slide.number}</span>
-                            <span class="text-[9px] font-bold text-blue-600 uppercase tracking-widest">${levelLabel}</span>
+                        <div class="bg-slate-900 p-4 flex justify-between items-center">
+                            <h3 class="text-white text-[11px] font-black uppercase tracking-[0.2em]">Section ${page.num}: ${page.title}</h3>
+                            <span class="text-[9px] text-slate-400 font-bold uppercase">Complexity: ${currentLevel}/3</span>
                         </div>
-                        <h3 class="font-bold text-slate-800 mb-3 uppercase text-sm">${slide.title}...</h3>
-                        <div class="text-slate-600 text-sm leading-relaxed">${analysisText}</div>
+                        <div class="p-6 space-y-6">
+                            <div>
+                                <h4 class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2">⚡ Quick Summary</h4>
+                                <p class="text-slate-700 text-sm font-medium leading-relaxed">${summary}</p>
+                            </div>
+
+                            <div class="pt-4 border-t border-slate-50">
+                                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">📖 Deep Analysis</h4>
+                                <p class="text-slate-600 text-sm leading-relaxed">${page.content.substring(0, 450)}...</p>
+                            </div>
+
+                            <div class="pt-4">
+                                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">📍 Key Takeaways (What to remember)</h4>
+                                <div class="flex flex-wrap gap-2">
+                                    ${takeaways.map(t => `<span class="takeaway-pill px-3 py-1 rounded-full text-[10px] font-bold tracking-tight">${t}</span>`).join('')}
+                                </div>
+                            </div>
+                        </div>
                     `;
                     output.appendChild(card);
                 });
-                statusLabel.innerText = "ANALYSIS COMPLETE";
-            }, 1200);
+            }, 1500);
         };
     </script>
 </body>
