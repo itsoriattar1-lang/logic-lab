@@ -3,138 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocuVision AI | Cloud Elite</title>
+    <title>DocuVision AI | Cloud Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <style>
-        .study-card { border-radius: 24px; border: 1px solid #e2e8f0; background: white; transition: all 0.3s ease; }
+        .study-card { border-radius: 24px; border: 1px solid #e2e8f0; background: white; }
         .sidebar-item { transition: all 0.2s; cursor: pointer; border-left: 3px solid transparent; }
         .sidebar-item:hover { background: #f1f5f9; border-left-color: #3b82f6; }
         .quiz-option { border: 2px solid #f1f5f9; cursor: pointer; transition: all 0.2s; border-radius: 12px; padding: 1rem; font-size: 0.85rem; }
         .quiz-option.show-correct { border-color: #10b981 !important; background: #f0fdf4 !important; color: #166534 !important; font-weight: 700 !important; }
         .quiz-option.selected-wrong { border-color: #ef4444 !important; background: #fef2f2 !important; color: #991b1b !important; }
         .explanation-box { display: none; }
+        .level-btn.active { background: #1e293b; color: white; }
     </style>
 </head>
 <body class="bg-[#f8fafc] min-h-screen text-slate-900 font-sans flex flex-col">
 
     <header class="h-16 border-b bg-white flex justify-between items-center px-6 sticky top-0 z-50">
-        <div class="flex items-center gap-3 cursor-pointer" id="homeLogo">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="location.reload()">
             <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black shadow-lg">DV</div>
-            <h1 class="text-sm font-black tracking-tighter uppercase hidden md:block">DocuVision <span class="text-blue-600">Pro</span></h1>
+            <h1 class="text-sm font-black tracking-tighter uppercase hidden md:block">DocuVision <span class="text-blue-600">Cloud</span></h1>
         </div>
 
-        <div class="flex items-center gap-6">
-            <div id="masteryContainer" class="hidden md:flex items-center gap-3 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
-                <div class="w-20 h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                    <div id="masteryBar" class="h-full bg-blue-600" style="width: 0%"></div>
-                </div>
-                <p id="masteryPercent" class="text-[10px] font-black">0%</p>
-            </div>
-            
-            <button id="loginBtn" class="flex items-center gap-2 bg-white border border-slate-200 px-4 py-1.5 rounded-full text-xs font-bold hover:bg-slate-50 transition-all shadow-sm">
+        <div class="flex items-center gap-4">
+            <button id="loginBtn" class="flex items-center gap-2 bg-white border border-slate-200 px-4 py-1.5 rounded-full text-xs font-bold hover:bg-slate-50 shadow-sm">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" class="w-4 h-4">
-                <span>Sign in with Google</span>
+                <span>Sign In</span>
             </button>
-            <div id="userProfile" class="hidden items-center gap-3">
-                <img id="userPhoto" class="w-8 h-8 rounded-full border border-slate-200">
-                <button id="logoutBtn" class="text-[10px] font-bold text-slate-400 hover:text-red-500 uppercase tracking-widest">Logout</button>
+            <div id="userProfile" class="hidden flex items-center gap-3">
+                <img id="userPhoto" class="w-8 h-8 rounded-full border">
+                <button id="logoutBtn" class="text-[10px] font-bold text-slate-400 hover:text-red-500 uppercase">Logout</button>
             </div>
         </div>
     </header>
 
     <div class="flex flex-1 overflow-hidden">
-        <aside class="w-64 border-r bg-white flex flex-col hidden lg:flex">
-            <div class="p-6 border-b">
-                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Your Library</h3>
-            </div>
-            <div class="flex-1 overflow-y-auto p-4 space-y-2" id="historyList">
-                <div class="text-[11px] text-slate-400 italic p-4 text-center">No saved analyses yet. Log in to save your history.</div>
-            </div>
+        <aside class="w-64 border-r bg-white hidden lg:flex flex-col">
+            <div class="p-6 border-b"><h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Saved Library</h3></div>
+            <div class="flex-1 overflow-y-auto p-4 space-y-2" id="historyList"></div>
         </aside>
 
         <main class="flex-1 overflow-y-auto p-8">
             <div class="max-w-4xl mx-auto">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-                    <div id="dropZone" class="md:col-span-1 rounded-2xl p-8 text-center bg-white border-2 border-dashed border-slate-200 cursor-pointer hover:border-blue-500 transition-all">
-                        <p id="fileNameDisplay" class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Upload PDF</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                    <div id="dropZone" class="p-8 text-center bg-white border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:border-blue-500 transition-all">
+                        <p id="fileNameDisplay" class="text-[10px] font-black text-slate-400 uppercase">Upload PDF</p>
                         <input type="file" id="fileInput" class="hidden" accept=".pdf">
                     </div>
-                    
-                    <div class="md:col-span-2 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h3 class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Analysis Depth</h3>
-                                <div class="flex gap-2">
-                                    <button data-level="1" class="level-btn active px-3 py-1.5 rounded-lg border text-[10px] font-bold">L1</button>
-                                    <button data-level="2" class="level-btn px-3 py-1.5 rounded-lg border text-[10px] font-bold">L2</button>
-                                    <button data-level="3" class="level-btn px-3 py-1.5 rounded-lg border text-[10px] font-bold">L3</button>
-                                </div>
+                    <div class="md:col-span-2 bg-white p-6 rounded-2xl border flex justify-between items-center">
+                        <div>
+                            <h3 class="text-[9px] font-black text-slate-400 uppercase mb-2">Depth</h3>
+                            <div class="flex gap-2">
+                                <button data-level="1" class="level-btn active px-3 py-1 rounded-lg border text-[10px] font-bold">L1</button>
+                                <button data-level="2" class="level-btn px-3 py-1 rounded-lg border text-[10px] font-bold">L2</button>
+                                <button data-level="3" class="level-btn px-3 py-1 rounded-lg border text-[10px] font-bold">L3</button>
                             </div>
-                            <button id="analyzeBtn" disabled class="bg-blue-600 text-white font-black px-6 py-3 rounded-xl hover:bg-slate-900 transition-all disabled:opacity-20 uppercase text-[10px] tracking-widest shadow-lg shadow-blue-100">Run Engine</button>
                         </div>
+                        <button id="analyzeBtn" disabled class="bg-blue-600 text-white font-black px-6 py-3 rounded-xl hover:bg-slate-900 disabled:opacity-20 text-[10px] uppercase shadow-lg shadow-blue-100">Run Engine</button>
                     </div>
                 </div>
-
-                <div id="output" class="space-y-8">
-                    <div id="placeholder" class="py-20 text-center text-slate-300 italic border-2 border-dashed border-slate-100 rounded-[32px]">
-                        Results will appear here...
-                    </div>
-                </div>
+                <div id="output" class="space-y-6"></div>
             </div>
         </main>
     </div>
 
     <script>
-        // Core Variables
-        const fileInput = document.getElementById('fileInput');
-        const dropZone = document.getElementById('dropZone');
-        const output = document.getElementById('output');
-        const analyzeBtn = document.getElementById('analyzeBtn');
-        const fileNameDisplay = document.getElementById('fileNameDisplay');
-        const homeLogo = document.getElementById('homeLogo');
-        const levelButtons = document.querySelectorAll('.level-btn');
-        const placeholder = document.getElementById('placeholder');
+        // PASTE YOUR CONFIG HERE
+        const firebaseConfig = {
+            apiKey: "AIzaSyA9QkqiRl50Vp8UdYqVsJHVekSHi1PNweA",
+            authDomain: "docuvision-25f5a.firebaseapp.com",
+            projectId: "docuvision-25f5a",
+            storageBucket: "docuvision-25f5a.firebasestorage.app",
+            messagingSenderId: "438841299291",
+            appId: "1:438841299291:web:d27751aff4bafdbcddca7e",
+            measurementId: "G-71CCCZ01L3"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const provider = new firebase.auth.GoogleAuthProvider();
+
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const userProfile = document.getElementById('userProfile');
+        const userPhoto = document.getElementById('userPhoto');
         const historyList = document.getElementById('historyList');
 
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        // Authentication Logic
+        loginBtn.onclick = () => auth.signInWithPopup(provider);
+        logoutBtn.onclick = () => auth.signOut();
 
-        let pageData = [];
-        let currentLevel = "1";
-        let scoreTracker = {};
-
-        // Mock History Logic (For now it saves to your browser session)
-        function saveToHistory(name) {
-            const date = new Date().toLocaleDateString();
-            const item = document.createElement('div');
-            item.className = "sidebar-item p-3 rounded-xl";
-            item.innerHTML = `
-                <p class="text-xs font-bold text-slate-800 truncate">${name}</p>
-                <p class="text-[9px] text-slate-400 uppercase font-black tracking-tighter">${date}</p>
-            `;
-            if(historyList.querySelector('italic')) historyList.innerHTML = "";
-            historyList.prepend(item);
-        }
-
-        homeLogo.onclick = () => location.reload();
-
-        levelButtons.forEach(btn => {
-            btn.onclick = () => {
-                levelButtons.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentLevel = btn.getAttribute('data-level');
-            };
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                loginBtn.classList.add('hidden');
+                userProfile.classList.remove('hidden');
+                userPhoto.src = user.photoURL;
+                loadHistory(user.uid);
+            } else {
+                loginBtn.classList.remove('hidden');
+                userProfile.classList.add('hidden');
+                historyList.innerHTML = '<p class="text-[10px] text-slate-400 italic text-center p-4">Sign in to see history</p>';
+            }
         });
 
-        dropZone.onclick = () => fileInput.click();
+        // Database Logic
+        async function saveAnalysis(fileName, data) {
+            const user = auth.currentUser;
+            if (!user) return;
+            await db.collection('users').doc(user.uid).collection('history').add({
+                fileName,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                summary: data.substring(0, 500)
+            });
+            loadHistory(user.uid);
+        }
 
+        async function loadHistory(uid) {
+            const snapshot = await db.collection('users').doc(uid).collection('history').orderBy('timestamp', 'desc').limit(5).get();
+            historyList.innerHTML = "";
+            snapshot.forEach(doc => {
+                const item = doc.data();
+                const div = document.createElement('div');
+                div.className = "sidebar-item p-3 rounded-xl border mb-2";
+                div.innerHTML = `<p class="text-[11px] font-bold truncate">${item.fileName}</p><p class="text-[9px] text-slate-400 uppercase">${new Date(item.timestamp?.toDate()).toLocaleDateString()}</p>`;
+                historyList.appendChild(div);
+            });
+        }
+
+        // PDF Logic (from previous steps)
+        const fileInput = document.getElementById('fileInput');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const output = document.getElementById('output');
+        let pageData = [];
+
+        document.getElementById('dropZone').onclick = () => fileInput.click();
         fileInput.onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            fileNameDisplay.innerText = file.name.toUpperCase();
+            document.getElementById('fileNameDisplay').innerText = file.name.toUpperCase();
             const reader = new FileReader();
             reader.onload = async function() {
                 const typedarray = new Uint8Array(this.result);
@@ -150,26 +162,29 @@
             reader.readAsArrayBuffer(file);
         };
 
-        analyzeBtn.onclick = () => {
+        analyzeBtn.onclick = async () => {
             output.innerHTML = "";
-            saveToHistory(fileNameDisplay.innerText);
+            const fileName = document.getElementById('fileNameDisplay').innerText;
+            const fullText = pageData.map(p => p.text).join(" ");
+            
+            await saveAnalysis(fileName, fullText);
+
             pageData.forEach((page, index) => {
-                const sentences = page.text.split('. ').filter(s => s.length > 40);
-                const mainFact = sentences[0] || "General subject information.";
-                const keywords = mainFact.split(' ').slice(0, 4).join(" ");
-                
+                const sentences = page.text.split('. ').filter(s => s.length > 30);
+                const fact = sentences[0] || "Content analysis in progress.";
+                const keywords = fact.split(' ').slice(0, 4).join(" ");
+
                 const card = document.createElement('div');
-                card.className = "study-card p-8 mb-6 shadow-sm";
+                card.className = "study-card p-8 shadow-sm";
                 card.innerHTML = `
                     <div class="flex items-center gap-3 mb-4">
-                        <span class="text-[9px] font-black bg-blue-600 text-white px-2 py-0.5 rounded uppercase">Page ${page.num}</span>
+                        <span class="text-[9px] font-black bg-slate-900 text-white px-2 py-0.5 rounded">PAGE ${page.num}</span>
                         <h3 class="text-md font-black text-slate-900">${keywords}...</h3>
                     </div>
-                    <p class="text-slate-500 text-xs leading-relaxed italic border-l-2 pl-4">${mainFact}</p>
+                    <p class="text-slate-500 text-xs italic border-l-2 pl-4 mb-4">${fact}</p>
                 `;
                 output.appendChild(card);
             });
-            output.scrollIntoView({ behavior: 'smooth' });
         };
     </script>
 </body>
