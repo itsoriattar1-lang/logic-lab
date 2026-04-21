@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocuVision AI | PDF Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <style>
+        .drop-zone { border: 2px dashed #3b82f6; transition: all 0.3s ease; }
+        .drop-zone:hover { border-color: #60a5fa; background: #eff6ff; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
+    <div class="max-w-5xl mx-auto p-6">
+        <header class="flex justify-between items-center mb-10 border-b pb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900">DocuVision <span class="text-blue-600">AI</span></h1>
+                <p class="text-sm text-slate-500 font-medium">Advanced Document Intelligence Analysis</p>
+            </div>
+            <div class="flex gap-4">
+                <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wider">System: Active</span>
+            </div>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-1 space-y-6">
+                <div id="dropZone" class="drop-zone rounded-xl p-8 text-center bg-white shadow-sm cursor-pointer">
+                    <div class="bg-blue-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                    </div>
+                    <p class="font-semibold text-slate-700">Upload PDF</p>
+                    <p class="text-xs text-slate-400 mt-2">Drag and drop or click to browse</p>
+                    <input type="file" id="fileInput" class="hidden" accept=".pdf">
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <h3 class="text-sm font-bold uppercase text-slate-400 mb-4 tracking-widest">Controls</h3>
+                    <button id="analyzeBtn" class="w-full bg-slate-900 text-white font-bold py-3 rounded-lg hover:bg-slate-800 transition-all disabled:opacity-50">
+                        Start Analysis
+                    </button>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 space-y-6">
+                <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 min-h-[400px]">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-lg font-bold">Analysis Output</h2>
+                        <div id="status" class="text-xs font-medium text-slate-400">Waiting for document...</div>
+                    </div>
+                    <div id="output" class="prose prose-slate max-w-none text-slate-600 italic">
+                        The extracted text and AI insights will appear here after upload.
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const dropZone = document.getElementById('dropZone');
+        const output = document.getElementById('output');
+        const status = document.getElementById('status');
+
+        dropZone.onclick = () => fileInput.click();
+
+        fileInput.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (file && file.type === "application/pdf") {
+                status.innerText = "Processing PDF...";
+                output.innerText = "Extracting text from " + file.name + "...";
+                
+                // PDF extraction logic would go here
+                setTimeout(() => {
+                    status.innerText = "Ready";
+                    output.innerHTML = "<strong>Document Loaded:</strong> " + file.name + "<br><br>Ready to analyze content.";
+                }, 1500);
+            }
+        };
+    </script>
+</body>
+</html>
