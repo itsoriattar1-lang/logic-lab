@@ -3,31 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocuVision AI | Elite Analyzer</title>
+    <title>DocuVision AI | Pro Mastery</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
         .study-card { border-radius: 24px; border: 1px solid #e2e8f0; background: white; transition: all 0.3s ease; }
         .level-btn.active { background: #1e293b; color: white; border-color: #1e293b; }
-        .quiz-option { border: 2px solid #f1f5f9; cursor: pointer; transition: all 0.2s; border-radius: 12px; padding: 1rem; font-size: 0.85rem; }
+        .quiz-option { border: 2px solid #f1f5f9; cursor: pointer; transition: all 0.2s; border-radius: 12px; padding: 1rem; font-size: 0.85rem; user-select: none; }
         .quiz-option:hover:not(.locked) { border-color: #3b82f6; background: #f0f9ff; }
-        .quiz-option.selected-wrong { border-color: #ef4444; background: #fef2f2; color: #991b1b; }
-        .quiz-option.show-correct { border-color: #10b981; background: #f0fdf4; color: #166534; font-weight: 700; }
-        .explanation-box { animation: fadeIn 0.4s ease-out; display: none; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .quiz-option.selected-wrong { border-color: #ef4444 !important; background: #fef2f2 !important; color: #991b1b !important; }
+        .quiz-option.show-correct { border-color: #10b981 !important; background: #f0fdf4 !important; color: #166534 !important; font-weight: 700 !important; }
+        .explanation-box { display: none; animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="bg-[#f8fafc] min-h-screen text-slate-900 font-sans pb-24">
     <div class="max-w-6xl mx-auto p-6">
         <header class="flex justify-between items-center mb-10 border-b pb-8">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black italic shadow-lg">DV</div>
-                <h1 class="text-lg font-black tracking-tighter uppercase">DocuVision <span class="text-blue-600">Elite</span></h1>
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black shadow-lg">DV</div>
+                <h1 class="text-lg font-black tracking-tighter uppercase">DocuVision <span class="text-blue-600">Pro</span></h1>
             </div>
             <div id="masteryContainer" class="hidden flex items-center gap-4 bg-white px-4 py-2 rounded-full border border-slate-200">
                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mastery</p>
                 <div class="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                    <div id="masteryBar" class="h-full bg-blue-600 transition-all duration-1000" style="width: 0%"></div>
+                    <div id="masteryBar" class="h-full bg-blue-600 transition-all duration-700" style="width: 0%"></div>
                 </div>
                 <p id="masteryPercent" class="text-xs font-black text-slate-900">0%</p>
             </div>
@@ -40,18 +40,18 @@
                     <input type="file" id="fileInput" class="hidden" accept=".pdf">
                 </div>
                 <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-                    <h3 class="text-[9px] font-black text-slate-400 mb-4 uppercase tracking-widest">Analysis Level</h3>
+                    <h3 class="text-[9px] font-black text-slate-400 mb-4 uppercase tracking-widest">Logic Depth</h3>
                     <div class="space-y-2">
                         <button data-level="1" class="level-btn active w-full text-left px-4 py-2.5 rounded-xl border text-[11px] font-bold">L1: CONCEPT SUMMARY</button>
                         <button data-level="2" class="level-btn w-full text-left px-4 py-2.5 rounded-xl border text-[11px] font-bold">L2: LOGIC ANALYSIS</button>
                         <button data-level="3" class="level-btn w-full text-left px-4 py-2.5 rounded-xl border text-[11px] font-bold border-blue-100 text-blue-600">L3: CONTENT MASTERY</button>
                     </div>
-                    <button id="analyzeBtn" disabled class="w-full mt-4 bg-blue-600 text-white font-black py-3 rounded-xl hover:bg-slate-900 transition-all disabled:opacity-20 uppercase text-[10px] tracking-widest shadow-lg shadow-blue-100">Execute Engine</button>
+                    <button id="analyzeBtn" disabled class="w-full mt-4 bg-blue-600 text-white font-black py-3 rounded-xl hover:bg-slate-900 transition-all disabled:opacity-20 uppercase text-[10px] tracking-widest shadow-lg shadow-blue-100">Run Extraction</button>
                 </div>
             </div>
 
             <div class="lg:col-span-3 space-y-8" id="output">
-                <div class="py-32 text-center text-slate-300 font-medium italic border-2 border-dashed border-slate-100 rounded-[32px]">Initialize source for deep scanning...</div>
+                <div class="py-32 text-center text-slate-300 font-medium italic border-2 border-dashed border-slate-100 rounded-[32px]">System Awaiting Intelligence Input...</div>
             </div>
         </main>
     </div>
@@ -102,81 +102,87 @@
             reader.readAsArrayBuffer(file);
         };
 
-        window.submitQuiz = (el, isCorrect, id, explanation) => {
-            const parent = el.parentElement;
-            if (parent.classList.contains('locked')) return;
+        // GLOBAL CLICK HANDLER (Fixes the non-clickable button issue)
+        document.addEventListener('click', (e) => {
+            const opt = e.target.closest('.quiz-option');
+            if (!opt || opt.parentElement.classList.contains('locked')) return;
+
+            const parent = opt.parentElement;
+            const pageIndex = parent.getAttribute('data-page-index');
+            const isCorrect = opt.getAttribute('data-correct') === 'true';
+            
             parent.classList.add('locked');
-
-            const options = parent.querySelectorAll('.quiz-option');
-            options.forEach(opt => {
-                if (opt.getAttribute('data-correct') === 'true') opt.classList.add('show-correct');
+            
+            // Mark correct/wrong
+            parent.querySelectorAll('.quiz-option').forEach(el => {
+                if (el.getAttribute('data-correct') === 'true') el.classList.add('show-correct');
             });
+            if (!isCorrect) opt.classList.add('selected-wrong');
+            else scoreTracker[pageIndex] = true;
 
-            if (!isCorrect) el.classList.add('selected-wrong');
-            else scoreTracker[id] = true;
+            // Show explanation
+            const exp = document.getElementById(`exp-${pageIndex}`);
+            if (exp) exp.style.display = 'block';
 
-            const exp = document.getElementById(`exp-${id}`);
-            exp.innerHTML = `<strong>Source Truth:</strong> ${explanation}`;
-            exp.style.display = 'block';
-
+            // Update Mastery
             const score = Math.round((Object.keys(scoreTracker).length / pageData.length) * 100);
             masteryPercent.innerText = score + "%";
             masteryBar.style.width = score + "%";
             masteryContainer.classList.remove('hidden');
-        };
+        });
 
         analyzeBtn.onclick = () => {
             output.innerHTML = "";
             pageData.forEach((page, index) => {
-                const sentences = page.text.split('. ').filter(s => s.length > 30);
-                const mainFact = sentences[0] || "General subject matter content.";
-                const distractor1 = sentences[1] ? sentences[1].substring(0, 70) + "..." : "Alternative contextual interpretation.";
-                const distractor2 = sentences[2] ? sentences[2].substring(0, 70) + "..." : "Secondary descriptive element.";
+                const sentences = page.text.split('. ').filter(s => s.length > 40);
+                const mainFact = sentences[0] || "General subject information presented on this slide.";
+                const dist1 = sentences[1] ? sentences[1].substring(0, 100) + "..." : "Contextual secondary observation.";
+                const dist2 = sentences[2] ? sentences[2].substring(0, 100) + "..." : "Alternative descriptive detail.";
                 
-                const keywords = mainFact.split(' ').slice(0, 4).join(" ");
-                
+                const keywords = mainFact.split(' ').slice(0, 4).join(" ") || "Topic Analysis";
                 const card = document.createElement('div');
                 card.className = "study-card p-10 mb-8 shadow-sm";
                 
-                let modeHTML = "";
+                let detailHTML = "";
                 if (currentLevel === "1") {
-                    modeHTML = `<p class="text-slate-600 text-sm leading-relaxed mt-4"><strong>Key Concept:</strong> This section establishes the primary definitions for ${keywords}. Focus on how these terms set the foundation for the upcoming analysis.</p>`;
+                    detailHTML = `<p class="text-slate-600 text-sm leading-relaxed mt-4 italic">Core Concept: ${mainFact}</p>`;
                 } else if (currentLevel === "2") {
-                    modeHTML = `<div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 mt-4">
-                        <h4 class="text-[10px] font-black text-slate-400 uppercase mb-2">Logic Architecture</h4>
-                        <p class="text-xs text-slate-700 leading-relaxed italic">"The document connects ${keywords} to the overall outcome by asserting that ${mainFact.substring(0, 100)}..."</p>
+                    detailHTML = `<div class="bg-blue-50/50 p-6 rounded-2xl border border-blue-100 mt-6">
+                        <h4 class="text-[10px] font-black text-blue-600 uppercase mb-2">Structural Analysis</h4>
+                        <p class="text-xs text-slate-800 leading-relaxed font-medium">This page links "${keywords}" to the broader thesis. It suggests that ${mainFact.substring(0, 150)}... is the primary driver of the page's logic.</p>
                     </div>`;
                 } else {
-                    // RANDOMIZE ANSWER ORDER
                     const answers = [
                         { text: mainFact, correct: true },
-                        { text: distractor1, correct: false },
-                        { text: distractor2, correct: false }
+                        { text: dist1, correct: false },
+                        { text: dist2, correct: false }
                     ].sort(() => Math.random() - 0.5);
 
-                    modeHTML = `
+                    detailHTML = `
                         <div class="mt-8 pt-8 border-t border-slate-100">
-                            <h4 class="text-[10px] font-black text-blue-600 uppercase mb-4 tracking-widest">Knowledge Check</h4>
-                            <p class="text-sm font-bold text-slate-800 mb-6 italic">Based on the text, what is the specific detail provided regarding "${keywords}..."?</p>
-                            <div class="space-y-3">
+                            <h4 class="text-[10px] font-black text-blue-600 uppercase mb-4 tracking-widest">Mastery Validation</h4>
+                            <p class="text-sm font-bold text-slate-900 mb-6">According to the text, which statement accurately reflects the data regarding "${keywords}..."?</p>
+                            <div class="space-y-3 quiz-container" data-page-index="${index}">
                                 ${answers.map((ans, i) => `
-                                    <div class="quiz-option" data-correct="${ans.correct}" onclick="submitQuiz(this, ${ans.correct}, ${index}, '${mainFact.replace(/'/g, "\\'")}')">
+                                    <div class="quiz-option" data-correct="${ans.correct}">
                                         ${String.fromCharCode(65 + i)}) ${ans.text}
                                     </div>
                                 `).join('')}
                             </div>
-                            <div id="exp-${index}" class="explanation-box mt-6 p-5 bg-white border border-blue-100 rounded-2xl text-[11px] text-blue-800 leading-relaxed font-medium"></div>
+                            <div id="exp-${index}" class="explanation-box mt-6 p-5 bg-white border border-blue-100 rounded-2xl text-[11px] text-blue-700 leading-relaxed font-bold">
+                                SOURCE TRUTH: ${mainFact}
+                            </div>
                         </div>
                     `;
                 }
 
                 card.innerHTML = `
                     <div class="flex items-center gap-3 mb-6">
-                        <span class="text-[9px] font-black bg-blue-600 text-white px-2 py-0.5 rounded">PAGE 0${page.num}</span>
-                        <h3 class="text-lg font-black text-slate-900">${keywords}...</h3>
+                        <span class="text-[9px] font-black bg-slate-900 text-white px-2.5 py-1 rounded-full">PAGE 0${page.num}</span>
+                        <h3 class="text-lg font-black text-slate-900 tracking-tight">${keywords}...</h3>
                     </div>
-                    <p class="text-slate-500 text-xs leading-relaxed mb-4">${page.text.substring(0, 250)}...</p>
-                    ${modeHTML}
+                    <p class="text-slate-400 text-xs leading-relaxed mb-4 font-medium">${page.text.substring(0, 200)}...</p>
+                    ${detailHTML}
                 `;
                 output.appendChild(card);
             });
