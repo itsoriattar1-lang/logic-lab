@@ -3,75 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocuVision AI | Advanced Master</title>
+    <title>DocuVision AI | Neural Elite</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
-        .study-card { border-radius: 20px; border: 1px solid #e2e8f0; background: white; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .study-card:hover { border-color: #2563eb; transform: translateY(-2px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05); }
-        .level-btn.active { background: #1e293b; color: white; border-color: #1e293b; transform: scale(1.02); }
-        .quiz-option { border: 2px solid #f8fafc; cursor: pointer; transition: all 0.2s; position: relative; }
-        .quiz-option:hover { border-color: #cbd5e1; background: #f8fafc; }
-        .quiz-option.correct { border-color: #10b981; background: #f0fdf4; color: #166534; font-weight: 600; }
-        .quiz-option.wrong { border-color: #ef4444; background: #fef2f2; color: #991b1b; }
-        .locked { pointer-events: none; }
+        .study-card { border-radius: 28px; border: 1px solid #e2e8f0; background: white; transition: all 0.4s ease; position: relative; overflow: hidden; }
+        .study-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: #3b82f6; opacity: 0.1; }
+        .level-btn.active { background: #1e293b; color: white; border-color: #1e293b; box-shadow: 0 4px 12px rgba(30, 41, 59, 0.2); }
+        .quiz-option { border: 2px solid #f1f5f9; cursor: pointer; transition: all 0.2s; border-radius: 16px; padding: 1rem; font-size: 0.8rem; }
+        .quiz-option:hover:not(.locked) { border-color: #3b82f6; background: #f0f7ff; }
+        .quiz-option.selected-wrong { border-color: #ef4444; background: #fef2f2; color: #991b1b; }
+        .quiz-option.show-correct { border-color: #10b981; background: #f0fdf4; color: #166534; font-weight: 700; border-style: solid; }
+        .explanation-box { animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="bg-[#fcfcfd] min-h-screen text-slate-900 font-sans pb-24">
-    <div class="max-w-7xl mx-auto p-6">
-        <header class="flex justify-between items-center mb-12 border-b border-slate-200 pb-8">
+<body class="bg-[#fcfdfe] min-h-screen text-slate-900 font-sans pb-24">
+    <div class="max-w-6xl mx-auto p-6">
+        <header class="flex justify-between items-center mb-12 border-b border-slate-100 pb-8">
             <div class="flex items-center gap-4">
-                <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black italic shadow-lg shadow-blue-200">DV</div>
+                <div class="w-10 h-10 bg-slate-900 rounded-2xl flex items-center justify-center text-white font-black italic shadow-xl">DV</div>
                 <div>
-                    <h1 class="text-xl font-black tracking-tight text-slate-900 uppercase">DocuVision <span class="text-blue-600 font-black">Elite</span></h1>
-                    <div class="flex items-center gap-2">
-                        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-[0.2em]">High-Density Analysis Engine</p>
-                    </div>
+                    <h1 class="text-xl font-black tracking-tighter uppercase">DocuVision <span class="text-blue-600">Cognitive</span></h1>
+                    <p class="text-[9px] text-slate-400 font-black uppercase tracking-[0.3em]">Semantic Analysis v5.2</p>
                 </div>
             </div>
-            <div id="masteryContainer" class="hidden flex items-center gap-4">
-                <div class="text-right">
-                    <p class="text-[9px] font-black text-slate-400 uppercase">Mastery Progress</p>
-                    <p id="masteryPercent" class="text-lg font-black text-slate-900">0%</p>
+            <div id="masteryContainer" class="hidden flex items-center gap-6 bg-white px-6 py-3 rounded-2xl border border-slate-100 shadow-sm">
+                <div>
+                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Knowledge Retention</p>
+                    <div class="w-32 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                        <div id="masteryBar" class="h-full bg-blue-600 transition-all duration-1000" style="width: 0%"></div>
+                    </div>
                 </div>
-                <div class="w-32 h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div id="masteryBar" class="h-full bg-blue-600 transition-all duration-500" style="width: 0%"></div>
-                </div>
+                <p id="masteryPercent" class="text-xl font-black text-slate-900">0%</p>
             </div>
         </header>
 
-        <main class="grid grid-cols-1 lg:grid-cols-12 gap-10">
-            <div class="lg:col-span-3 space-y-6">
-                <div id="dropZone" class="rounded-3xl p-8 text-center bg-white border-2 border-dashed border-slate-200 cursor-pointer hover:border-blue-500 transition-all group">
-                    <div class="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-50">
-                        <svg class="w-6 h-6 text-slate-400 group-hover:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                    </div>
-                    <p id="fileNameDisplay" class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Select Intelligence Source</p>
+        <main class="grid grid-cols-1 lg:grid-cols-4 gap-10">
+            <div class="lg:col-span-1 space-y-4">
+                <div id="dropZone" class="rounded-3xl p-8 text-center bg-white border-2 border-dashed border-slate-200 cursor-pointer hover:border-blue-500 hover:bg-blue-50/30 transition-all">
+                    <p id="fileNameDisplay" class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Identify Source</p>
                     <input type="file" id="fileInput" class="hidden" accept=".pdf">
                 </div>
-
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-6">
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-6">
                     <div>
-                        <h3 class="text-[10px] font-black text-slate-400 mb-4 uppercase tracking-[0.2em]">Depth Configuration</h3>
-                        <div class="space-y-2" id="levelSelector">
-                            <button data-level="1" class="level-btn active w-full text-left px-4 py-3 rounded-xl border text-xs font-bold transition-all">L1: CONCEPT OVERVIEW</button>
-                            <button data-level="2" class="level-btn w-full text-left px-4 py-3 rounded-xl border text-xs font-bold transition-all">L2: LOGIC ANALYSIS</button>
-                            <button data-level="3" class="level-btn w-full text-left px-4 py-3 rounded-xl border text-xs font-bold border-blue-100 text-blue-600">L3: ACADEMIC MASTERY</button>
+                        <h3 class="text-[9px] font-black text-slate-400 mb-4 uppercase tracking-widest">Cognitive Depth</h3>
+                        <div class="space-y-2">
+                            <button data-level="1" class="level-btn active w-full text-left px-4 py-3 rounded-xl border text-[11px] font-bold transition-all">EXECUTIVE SUMMARY</button>
+                            <button data-level="2" class="level-btn w-full text-left px-4 py-3 rounded-xl border text-[11px] font-bold transition-all text-slate-600">LOGIC ARCHITECTURE</button>
+                            <button data-level="3" class="level-btn w-full text-left px-4 py-3 rounded-xl border text-[11px] font-bold border-blue-100 text-blue-600">ACADEMIC MASTERY</button>
                         </div>
                     </div>
-                    <button id="analyzeBtn" disabled class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl hover:bg-slate-900 transition-all disabled:opacity-20 shadow-xl shadow-blue-100 uppercase text-[10px] tracking-[0.2em]">
-                        Initialize Analysis
-                    </button>
+                    <button id="analyzeBtn" disabled class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl hover:bg-slate-900 transition-all disabled:opacity-20 uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-blue-100">Begin Scan</button>
                 </div>
             </div>
 
-            <div class="lg:col-span-9 space-y-8" id="output">
-                <div class="flex flex-col items-center justify-center py-40 bg-white rounded-[40px] border border-slate-100">
-                    <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
-                        <svg class="w-8 h-8 text-slate-200" fill="currentColor" viewBox="0 0 20 20"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V4.804z"></path></svg>
+            <div class="lg:col-span-3 space-y-10" id="output">
+                <div class="py-40 text-center">
+                    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-6 h-6 text-slate-200" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
                     </div>
-                    <p class="text-slate-400 font-medium tracking-tight">System standing by for document upload...</p>
+                    <p class="text-slate-400 font-medium tracking-tight">System ready for intelligence extraction...</p>
                 </div>
             </div>
         </main>
@@ -123,80 +115,109 @@
             reader.readAsArrayBuffer(file);
         };
 
-        window.processQuiz = (el, correct, id) => {
+        // COMMON SENSE ENGINE: Detects the type of content on a page
+        function classifyContent(text) {
+            const lowerText = text.toLowerCase();
+            if (lowerText.includes('table of contents') || lowerText.includes('index')) return 'STRUCTURE';
+            if (lowerText.includes('summary') || lowerText.includes('conclusion')) return 'KEY_OUTCOME';
+            if (text.match(/\d+\%/ ) || lowerText.includes('data') || lowerText.includes('figure')) return 'DATA_HEAVY';
+            return 'GENERAL';
+        }
+
+        window.handleQuiz = (el, isCorrect, id, expl) => {
             const parent = el.parentElement;
             if (parent.classList.contains('locked')) return;
-            
-            el.classList.add(correct ? 'correct' : 'wrong');
             parent.classList.add('locked');
-            
-            if (correct) {
-                scoreTracker[id] = true;
-                const score = Math.round((Object.keys(scoreTracker).length / pageData.length) * 100);
-                masteryPercent.innerText = score + "%";
-                masteryBar.style.width = score + "%";
-                masteryContainer.classList.remove('hidden');
-            }
+
+            const allOptions = parent.querySelectorAll('.quiz-option');
+            allOptions.forEach(opt => {
+                if (opt.getAttribute('data-correct') === 'true') opt.classList.add('show-correct');
+            });
+
+            if (!isCorrect) el.classList.add('selected-wrong');
+            else scoreTracker[id] = true;
+
+            const expBox = document.getElementById(`exp-${id}`);
+            expBox.innerHTML = `<strong>ANALYSIS:</strong> ${expl}`;
+            expBox.style.display = 'block';
+
+            const score = Math.round((Object.keys(scoreTracker).length / pageData.length) * 100);
+            masteryPercent.innerText = score + "%";
+            masteryBar.style.width = score + "%";
+            masteryContainer.classList.remove('hidden');
         };
 
         analyzeBtn.onclick = () => {
-            output.innerHTML = `<div class="text-center py-20 animate-pulse text-slate-400 font-bold uppercase tracking-widest">Compiling Multi-Level Intelligence...</div>`;
-            
-            setTimeout(() => {
-                output.innerHTML = "";
-                pageData.forEach((page, index) => {
-                    const words = page.text.trim().split(/\s+/);
-                    const mainConcept = words.slice(0, 4).join(" ") || "Document Subject";
-                    
-                    const card = document.createElement('div');
-                    card.className = "study-card p-10 mb-10";
-                    
-                    let depthContent = "";
-                    if (currentLevel === "1") {
-                        depthContent = `<p class="text-slate-600 leading-relaxed font-medium">Concept: This page introduces <strong>${mainConcept}</strong>. Focus on the core definitions and how they set the stage for the rest of the document.</p>`;
-                    } else if (currentLevel === "2") {
-                        depthContent = `
-                            <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 mb-6">
-                                <h4 class="text-[10px] font-black text-slate-400 uppercase mb-3">Logic Thread</h4>
-                                <p class="text-sm text-slate-700 leading-relaxed italic">"The document connects ${words[5] || 'initial points'} to the broader scope of ${mainConcept}. Look for how the author justifies their claims here."</p>
-                            </div>
-                        `;
-                    } else {
-                        depthContent = `
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                                <div class="border-l-4 border-blue-600 pl-6">
-                                    <h4 class="text-[10px] font-black text-blue-600 uppercase mb-2">Academic Pivot</h4>
-                                    <p class="text-xs text-slate-700 font-bold">The significance of ${words[2]} in this context is often a major exam topic. Understand the "Why" behind the data.</p>
-                                </div>
-                                <div class="border-l-4 border-amber-500 pl-6">
-                                    <h4 class="text-[10px] font-black text-amber-500 uppercase mb-2">Exam Probability</h4>
-                                    <p class="text-xs text-slate-600 italic font-medium tracking-tight">High likelihood of multiple-choice questions regarding ${words[1]}.</p>
-                                </div>
-                            </div>
-                            <div class="mt-10 p-8 bg-[#f8fafc] rounded-[32px] border border-slate-200">
-                                <h4 class="text-[11px] font-black text-slate-900 uppercase tracking-widest mb-6 text-center">Mastery Check: Section ${page.num}</h4>
-                                <p class="text-sm font-bold text-slate-800 mb-6">Which of the following best represents the underlying principle of ${mainConcept} discussed in this section?</p>
-                                <div class="space-y-3">
-                                    <div class="quiz-option p-4 rounded-2xl text-xs font-medium" onclick="processQuiz(this, true, ${index})">A) It functions as a primary structural framework for ${words[8] || 'the topic'}.</div>
-                                    <div class="quiz-option p-4 rounded-2xl text-xs font-medium" onclick="processQuiz(this, false, ${index})">B) It is a secondary observation that does not affect the overall logic.</div>
-                                    <div class="quiz-option p-4 rounded-2xl text-xs font-medium" onclick="processQuiz(this, false, ${index})">C) It is a legacy concept that has been replaced by modern data.</div>
-                                </div>
-                            </div>
-                        `;
-                    }
+            output.innerHTML = "";
+            pageData.forEach((page, index) => {
+                const contentType = classifyContent(page.text);
+                const words = page.text.trim().split(/\s+/);
+                const header = words.slice(0, 4).join(" ") || "Section Analysis";
+                
+                const card = document.createElement('div');
+                card.className = "study-card p-10 shadow-sm mb-12";
+                
+                let brainLogic = {
+                    focus: "Foundational Overview",
+                    tip: "Focus on how these terms define the scope of the document.",
+                    q: `What is the primary role of "${header}" in the document's hierarchy?`,
+                    a1: "It serves as a critical definition for the following data.",
+                    a2: "It is supplementary text for formatting purposes.",
+                    expl: "Correct. High-level analysis shows this section establishes the parameters for the rest of the file."
+                };
 
-                    card.innerHTML = `
-                        <div class="flex items-center gap-3 mb-8">
-                            <span class="text-[10px] font-black bg-blue-600 text-white px-3 py-1 rounded-full uppercase tracking-tighter shadow-sm shadow-blue-100">Section 0${page.num}</span>
-                            <div class="h-[1px] flex-grow bg-slate-100"></div>
+                if (contentType === 'DATA_HEAVY') {
+                    brainLogic = {
+                        focus: "Quantitative Analysis",
+                        tip: "This page contains specific data points. Memorize the relationship between these numbers.",
+                        q: "Why is the data presented in this section vital for the exam?",
+                        a1: "It provides empirical evidence to support the main claims.",
+                        a2: "It is provided to fill space in the document structure.",
+                        expl: "Correct. Data-heavy sections are almost always the basis for 'Evidence' style questions on exams."
+                    };
+                } else if (contentType === 'STRUCTURE') {
+                    brainLogic = {
+                        focus: "Structural Blueprint",
+                        tip: "This is a navigational page. Use it to understand the flow of the argument.",
+                        q: "What does this structural overview tell us about the document's logic?",
+                        a1: "It reveals a step-by-step progression from concept to application.",
+                        a2: "It shows that the document is a random collection of thoughts.",
+                        expl: "Correct. Professional documents follow a linear logic path which this index makes clear."
+                    };
+                }
+
+                let depthHTML = "";
+                if (currentLevel === "3") {
+                    depthHTML = `
+                        <div class="mt-10 pt-10 border-t border-slate-50">
+                            <div class="flex items-center gap-2 mb-6">
+                                <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cognitive Focus: ${brainLogic.focus}</h4>
+                            </div>
+                            <p class="text-[11px] text-slate-500 font-medium mb-8 leading-relaxed">${brainLogic.tip}</p>
+                            <div class="bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
+                                <p class="text-sm font-bold text-slate-800 mb-6">${brainLogic.q}</p>
+                                <div class="space-y-3">
+                                    <div class="quiz-option" data-correct="true" onclick="handleQuiz(this, true, ${index}, '${brainLogic.expl.replace(/'/g, "\\'")}')">A) ${brainLogic.a1}</div>
+                                    <div class="quiz-option" data-correct="false" onclick="handleQuiz(this, false, ${index}, '${brainLogic.expl.replace(/'/g, "\\'")}')">B) ${brainLogic.a2}</div>
+                                </div>
+                                <div id="exp-${index}" class="explanation-box mt-6 p-5 bg-white border border-blue-100 rounded-2xl text-[10px] text-blue-700 leading-relaxed font-bold hidden shadow-sm"></div>
+                            </div>
                         </div>
-                        <h2 class="text-2xl font-black text-slate-900 mb-6 tracking-tight">${mainConcept}...</h2>
-                        <div class="mb-10 text-slate-500 text-sm leading-relaxed">${page.text.substring(0, 350)}...</div>
-                        ${depthContent}
                     `;
-                    output.appendChild(card);
-                });
-            }, 1000);
+                }
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-8">
+                        <span class="text-[9px] font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase tracking-tighter">Segment 0${page.num}</span>
+                        <span class="text-[9px] font-black text-slate-300 uppercase tracking-widest">${contentType} Detected</span>
+                    </div>
+                    <h3 class="text-xl font-black text-slate-900 mb-6 tracking-tight">${header}...</h3>
+                    <p class="text-slate-400 text-xs leading-relaxed mb-6 font-medium">${page.text.substring(0, 300)}...</p>
+                    ${depthHTML}
+                `;
+                output.appendChild(card);
+            });
         };
     </script>
 </body>
