@@ -8,22 +8,27 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
         .study-card { border-radius: 24px; border: 1px solid #e2e8f0; background: white; transition: all 0.3s ease; }
-        .level-btn.active { background: #1e293b; color: white; border-color: #1e293b; }
+        .level-btn { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .level-btn:hover:not(.active) { background: #f1f5f9; transform: translateX(4px); }
+        .level-btn.active { background: #1e293b; color: white; border-color: #1e293b; box-shadow: 0 4px 12px rgba(30, 41, 59, 0.1); }
         .quiz-option { border: 2px solid #f1f5f9; cursor: pointer; transition: all 0.2s; border-radius: 12px; padding: 1rem; font-size: 0.85rem; user-select: none; }
-        .quiz-option:hover:not(.locked) { border-color: #3b82f6; background: #f0f9ff; }
+        .quiz-option:hover:not(.locked) { border-color: #3b82f6; background: #f0f9ff; transform: scale(1.01); }
         .quiz-option.selected-wrong { border-color: #ef4444 !important; background: #fef2f2 !important; color: #991b1b !important; }
         .quiz-option.show-correct { border-color: #10b981 !important; background: #f0fdf4 !important; color: #166534 !important; font-weight: 700 !important; }
         .explanation-box { display: none; animation: slideUp 0.3s ease-out; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .logo-btn { cursor: pointer; transition: opacity 0.2s; }
+        .logo-btn:hover { opacity: 0.8; }
     </style>
 </head>
-<body class="bg-[#f8fafc] min-h-screen text-slate-900 font-sans pb-24">
+<body class="bg-[#f8fafc] min-h-screen text-slate-900 font-sans pb-24 scroll-smooth">
     <div class="max-w-6xl mx-auto p-6">
         <header class="flex justify-between items-center mb-10 border-b pb-8">
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 logo-btn" id="homeLogo">
                 <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black shadow-lg">DV</div>
                 <h1 class="text-lg font-black tracking-tighter uppercase">DocuVision <span class="text-blue-600">Pro</span></h1>
             </div>
+            
             <div id="masteryContainer" class="hidden flex items-center gap-4 bg-white px-4 py-2 rounded-full border border-slate-200">
                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mastery</p>
                 <div class="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -35,7 +40,7 @@
 
         <main class="grid grid-cols-1 lg:grid-cols-4 gap-8">
             <div class="lg:col-span-1 space-y-4">
-                <div id="dropZone" class="rounded-2xl p-6 text-center bg-white border-2 border-dashed border-slate-200 cursor-pointer hover:border-blue-500 transition-all">
+                <div id="dropZone" class="rounded-2xl p-6 text-center bg-white border-2 border-dashed border-slate-200 cursor-pointer hover:border-blue-500 transition-all bg-gradient-to-b from-white to-slate-50">
                     <p id="fileNameDisplay" class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Upload Source</p>
                     <input type="file" id="fileInput" class="hidden" accept=".pdf">
                 </div>
@@ -51,7 +56,9 @@
             </div>
 
             <div class="lg:col-span-3 space-y-8" id="output">
-                <div class="py-32 text-center text-slate-300 font-medium italic border-2 border-dashed border-slate-100 rounded-[32px]">System Awaiting Intelligence Input...</div>
+                <div id="placeholder" class="py-32 text-center text-slate-300 font-medium italic border-2 border-dashed border-slate-100 rounded-[32px]">
+                    System Awaiting Intelligence Input...
+                </div>
             </div>
         </main>
     </div>
@@ -60,18 +67,32 @@
         const fileInput = document.getElementById('fileInput');
         const dropZone = document.getElementById('dropZone');
         const output = document.getElementById('output');
+        const placeholder = document.getElementById('placeholder');
         const analyzeBtn = document.getElementById('analyzeBtn');
         const fileNameDisplay = document.getElementById('fileNameDisplay');
         const levelButtons = document.querySelectorAll('.level-btn');
         const masteryContainer = document.getElementById('masteryContainer');
         const masteryPercent = document.getElementById('masteryPercent');
         const masteryBar = document.getElementById('masteryBar');
+        const homeLogo = document.getElementById('homeLogo');
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
         let pageData = [];
         let currentLevel = "1";
         let scoreTracker = {};
+
+        // RESET FUNCTIONALITY (Takes you back to the "Front Page")
+        homeLogo.onclick = () => {
+            output.innerHTML = "";
+            output.appendChild(placeholder);
+            pageData = [];
+            scoreTracker = {};
+            fileNameDisplay.innerText = "UPLOAD SOURCE";
+            analyzeBtn.disabled = true;
+            masteryContainer.classList.add('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
 
         levelButtons.forEach(btn => {
             btn.onclick = () => {
@@ -102,7 +123,6 @@
             reader.readAsArrayBuffer(file);
         };
 
-        // GLOBAL CLICK HANDLER (Fixes the non-clickable button issue)
         document.addEventListener('click', (e) => {
             const opt = e.target.closest('.quiz-option');
             if (!opt || opt.parentElement.classList.contains('locked')) return;
@@ -113,18 +133,15 @@
             
             parent.classList.add('locked');
             
-            // Mark correct/wrong
             parent.querySelectorAll('.quiz-option').forEach(el => {
                 if (el.getAttribute('data-correct') === 'true') el.classList.add('show-correct');
             });
             if (!isCorrect) opt.classList.add('selected-wrong');
             else scoreTracker[pageIndex] = true;
 
-            // Show explanation
             const exp = document.getElementById(`exp-${pageIndex}`);
             if (exp) exp.style.display = 'block';
 
-            // Update Mastery
             const score = Math.round((Object.keys(scoreTracker).length / pageData.length) * 100);
             masteryPercent.innerText = score + "%";
             masteryBar.style.width = score + "%";
@@ -186,6 +203,8 @@
                 `;
                 output.appendChild(card);
             });
+            // Auto-Scroll to results
+            output.scrollIntoView({ behavior: 'smooth' });
         };
     </script>
 </body>
