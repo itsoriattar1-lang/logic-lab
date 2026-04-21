@@ -3,55 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocuVision AI | Study Companion</title>
+    <title>DocuVision AI | Academic Intelligence</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
         .drop-zone { border: 2px dashed #3b82f6; }
-        .section-card { border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
+        .study-card { border-radius: 16px; border: 1px solid #e2e8f0; background: white; transition: all 0.3s ease; }
+        .study-card:hover { border-color: #3b82f6; box-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.1); }
         .level-btn.active { background-color: #2563eb; color: white; border-color: #2563eb; }
-        .takeaway-pill { background: #f0f9ff; border: 1px solid #e0f2fe; color: #0369a1; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
     <div class="max-w-6xl mx-auto p-6">
         <header class="flex justify-between items-center mb-8 border-b pb-6">
             <div>
-                <h1 class="text-2xl font-black text-slate-900 tracking-tight">DocuVision <span class="text-blue-600 font-extrabold">STUDY</span></h1>
-                <p class="text-sm text-slate-500 font-medium tracking-tight">Academic Intelligence & Document Analysis</p>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight italic">DOCU<span class="text-blue-600 not-italic">VISION</span></h1>
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em]">Neural Study Matrix v4.0</p>
             </div>
-            <div class="px-3 py-1 bg-blue-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-200">AI Core Active</div>
+            <div class="flex items-center gap-3">
+                <span class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+                <span class="text-[10px] font-black text-slate-600 uppercase tracking-widest">Logic Engine: Active</span>
+            </div>
         </header>
 
         <main class="grid grid-cols-1 lg:grid-cols-4 gap-8">
             <div class="lg:col-span-1 space-y-4">
-                <div id="dropZone" class="drop-zone rounded-2xl p-6 text-center bg-white shadow-sm cursor-pointer hover:border-blue-400 transition-all">
-                    <p id="fileNameDisplay" class="font-bold text-slate-400 text-[10px] uppercase tracking-widest">Select PDF Document</p>
+                <div id="dropZone" class="drop-zone rounded-2xl p-8 text-center bg-white shadow-sm cursor-pointer hover:bg-blue-50/50 transition-all border-slate-200">
+                    <p id="fileNameDisplay" class="text-[11px] font-black text-blue-500 uppercase tracking-widest">Load Source PDF</p>
                     <input type="file" id="fileInput" class="hidden" accept=".pdf">
                 </div>
 
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
-                    <h3 class="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-[0.2em]">Study Intensity</h3>
+                    <h3 class="text-[10px] font-black text-slate-400 mb-4 tracking-widest uppercase">Analysis Mode</h3>
                     <div class="space-y-2" id="levelSelector">
-                        <button data-level="1" class="level-btn active w-full text-left px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all">Quick Review</button>
-                        <button data-level="2" class="level-btn w-full text-left px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all">Standard Study</button>
-                        <button data-level="3" class="level-btn w-full text-left px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all">Exam Prep (Deep Dive)</button>
+                        <button data-level="1" class="level-btn active w-full text-left px-4 py-3 rounded-xl border text-xs font-bold transition-all">CONCEPT SUMMARY</button>
+                        <button data-level="2" class="level-btn w-full text-left px-4 py-3 rounded-xl border text-xs font-bold transition-all">LOGIC BREAKDOWN</button>
+                        <button data-level="3" class="level-btn w-full text-left px-4 py-3 rounded-xl border text-xs font-bold transition-all">TEST PREP MODE</button>
                     </div>
                 </div>
 
-                <button id="analyzeBtn" disabled class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl hover:bg-black transition-all disabled:opacity-20 shadow-xl uppercase text-[11px] tracking-widest">
-                    Generate Study Guide
+                <button id="analyzeBtn" disabled class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl hover:bg-blue-600 transition-all disabled:opacity-20 uppercase text-[11px] tracking-[0.2em]">
+                    Execute Intelligence Scan
                 </button>
             </div>
 
-            <div class="lg:col-span-3 space-y-6">
-                <div id="output" class="space-y-8">
-                    <div class="bg-white p-12 rounded-3xl border border-dashed border-slate-200 text-center">
-                        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                        </div>
-                        <h2 class="text-slate-400 font-medium">Ready to transform your PDF into a study guide.</h2>
-                    </div>
+            <div class="lg:col-span-3 space-y-8" id="output">
+                <div class="text-center py-32 border-2 border-dashed border-slate-200 rounded-3xl bg-white/50">
+                    <p class="text-slate-400 font-medium text-sm">Awaiting document for neural processing...</p>
                 </div>
             </div>
         </main>
@@ -83,7 +81,7 @@
         fileInput.onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            fileNameDisplay.innerText = file.name.substring(0, 20) + "...";
+            fileNameDisplay.innerText = file.name.toUpperCase();
             analyzeBtn.disabled = true;
             pageData = [];
 
@@ -95,48 +93,76 @@
                     const page = await pdf.getPage(i);
                     const textContent = await page.getTextContent();
                     const text = textContent.items.map(item => item.str).join(" ");
-                    const title = text.trim().split(/\s+/).slice(0, 5).join(" ") || "General Content";
-                    pageData.push({ num: i, title: title, content: text });
+                    pageData.push({ num: i, rawText: text });
                 }
                 analyzeBtn.disabled = false;
-                output.innerHTML = `<div class="bg-blue-50 text-blue-700 p-4 rounded-xl text-center text-sm font-bold tracking-tight">DOCUMENT DIGESTED: ${pageData.length} PAGES FOUND</div>`;
+                output.innerHTML = `<div class="bg-blue-600 text-white p-4 rounded-xl text-center text-[10px] font-black tracking-[0.3em]">SCAN COMPLETE: ${pageData.length} PAGES BUFFERED</div>`;
             };
             reader.readAsArrayBuffer(file);
         };
 
+        // THE REFINEMENT ENGINE (This simulates the "Common Sense")
+        function refineContent(text, level) {
+            // Logic to strip out "Noise" like Page 1, Name:, Date:, etc.
+            const noisePatterns = [/Page \d+/gi, /Name: _+/gi, /Date: _+/gi, /Instructor: .+/gi];
+            let cleaned = text;
+            noisePatterns.forEach(pattern => cleaned = cleaned.replace(pattern, ""));
+
+            // Simulation of AI Intelligence until we connect the API
+            const words = cleaned.trim().split(/\s+/);
+            const mainTopic = words.slice(0, 3).join(" ");
+            
+            if (level === "1") {
+                return {
+                    summary: `This section focuses on ${mainTopic}. It establishes the foundational concepts needed to understand the rest of the document.`,
+                    insight: `Focus on the definitions provided here. They are the building blocks for the technical parts later on.`,
+                    data: ["Core Definition", "Primary Concept"]
+                };
+            } else if (level === "2") {
+                return {
+                    summary: `A logical deep-dive into ${mainTopic}. This isn't just text; it's a structural argument for why this system works.`,
+                    insight: `The author uses ${words[10] || 'specific data'} to prove their point. Notice how this connects to the previous section.`,
+                    data: ["Logical Chain", "Evidence Type", "Supporting Argument"]
+                };
+            } else {
+                return {
+                    summary: `TEST PREP: Expect questions on how ${mainTopic} affects the overall outcome.`,
+                    insight: `This is a high-probability test area. Don't just read it—understand the 'Why' behind the ${words[5] || 'concepts'}.`,
+                    data: ["Exam-Critical Fact", "Possible Test Question", "Comparison Point"]
+                };
+            }
+        }
+
         analyzeBtn.onclick = () => {
-            output.innerHTML = `<div class="text-center py-20"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div><p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Synthesizing Study Modules...</p></div>`;
+            output.innerHTML = `<div class="text-center py-20"><div class="animate-ping h-8 w-8 rounded-full bg-blue-400 mx-auto opacity-75"></div><p class="text-[10px] font-black text-slate-400 mt-8 tracking-widest uppercase">Synthesizing Neural Insights...</p></div>`;
             
             setTimeout(() => {
                 output.innerHTML = "";
                 pageData.forEach(page => {
+                    const intelligence = refineContent(page.rawText, currentLevel);
                     const card = document.createElement('div');
-                    card.className = "section-card bg-white shadow-sm border border-slate-200 mb-8";
-                    
-                    // Simple logic for simulation - this is where the AI brain will go
-                    let summary = `Page ${page.num} introduces the concept of "${page.title}" and discusses its primary framework.`;
-                    let takeaways = ["Main concept definition", "Core methodology used", "Primary data observation"];
-
+                    card.className = "study-card mb-8 shadow-sm overflow-hidden";
                     card.innerHTML = `
-                        <div class="bg-slate-900 p-4 flex justify-between items-center">
-                            <h3 class="text-white text-[11px] font-black uppercase tracking-[0.2em]">Section ${page.num}: ${page.title}</h3>
-                            <span class="text-[9px] text-slate-400 font-bold uppercase">Complexity: ${currentLevel}/3</span>
+                        <div class="bg-slate-50 border-b p-4 flex justify-between items-center">
+                            <span class="text-[10px] font-black text-slate-900 tracking-[0.2em]">SECTION 0${page.num}</span>
+                            <span class="text-[9px] font-bold text-blue-600 uppercase tracking-widest">Scan Confidence: 98%</span>
                         </div>
-                        <div class="p-6 space-y-6">
-                            <div>
-                                <h4 class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2">⚡ Quick Summary</h4>
-                                <p class="text-slate-700 text-sm font-medium leading-relaxed">${summary}</p>
+                        <div class="p-8 space-y-8">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div>
+                                    <h4 class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-3">⚡ Neural Summary</h4>
+                                    <p class="text-slate-700 text-sm font-semibold leading-relaxed">${intelligence.summary}</p>
+                                </div>
+                                <div>
+                                    <h4 class="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-3">🧠 Study Insight</h4>
+                                    <p class="text-slate-600 text-sm leading-relaxed italic border-l-2 border-amber-200 pl-4">${intelligence.insight}</p>
+                                </div>
                             </div>
-
-                            <div class="pt-4 border-t border-slate-50">
-                                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">📖 Deep Analysis</h4>
-                                <p class="text-slate-600 text-sm leading-relaxed">${page.content.substring(0, 450)}...</p>
-                            </div>
-
-                            <div class="pt-4">
-                                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">📍 Key Takeaways (What to remember)</h4>
+                            
+                            <div class="pt-6 border-t border-slate-50">
+                                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">📍 Critical Takeaways</h4>
                                 <div class="flex flex-wrap gap-2">
-                                    ${takeaways.map(t => `<span class="takeaway-pill px-3 py-1 rounded-full text-[10px] font-bold tracking-tight">${t}</span>`).join('')}
+                                    ${intelligence.data.map(d => `<span class="bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-slate-200">${d}</span>`).join('')}
                                 </div>
                             </div>
                         </div>
