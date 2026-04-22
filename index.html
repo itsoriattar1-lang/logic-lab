@@ -1,6 +1,7 @@
+<script>
 document.getElementById('analyzeBtn').onclick = async () => {
     const out = document.getElementById('output');
-    out.innerHTML = "<div class='text-center animate-pulse py-10 font-black text-blue-600 uppercase text-xs'>Sifting through Data Layers...</div>";
+    out.innerHTML = "<div class='text-center animate-pulse py-10 font-black text-blue-600 uppercase text-xs tracking-widest'>Sifting through Data Layers...</div>";
     
     setTimeout(() => {
         out.innerHTML = "";
@@ -8,12 +9,11 @@ document.getElementById('analyzeBtn').onclick = async () => {
             const text = page.text;
             
             // 1. REFINEMENT: Extract "Intellectual Triggers"
-            // Finds years (1700-2099), definitions (word is/means...), and conclusions
             const dates = text.match(/\b(17|18|19|20)\d{2}\b/g) || [];
             const definitions = text.match(/([^.!?]+ (is defined as|refers to|means|is the) [^.!?]+)/gi) || [];
             const conclusions = text.match(/(therefore|consequently|as a result|because|leads to)[^.!?]+/gi) || [];
             
-            // 2. DATA PICKING: Priority order for "Simple" and "Logic"
+            // 2. DATA PICKING
             const primaryPoint = definitions[0] || conclusions[0] || text.split('. ')[0];
             const uniqueDates = [...new Set(dates)].slice(0, 3);
             
@@ -23,7 +23,6 @@ document.getElementById('analyzeBtn').onclick = async () => {
             let html = "";
 
             if (currentLevel === "simple") {
-                // SIMPLE MODE: Focuses on Definitions and Dates
                 html = `
                     <div class="space-y-4">
                         <p class="text-slate-600 text-sm leading-relaxed border-l-4 border-blue-500 pl-6 font-medium">${primaryPoint}.</p>
@@ -31,21 +30,18 @@ document.getElementById('analyzeBtn').onclick = async () => {
                     </div>`;
             } 
             else if (currentLevel === "logic") {
-                // LOGIC MODE: Focuses on Causality (Why things happened)
                 const logicPoint = conclusions[0] || "No clear causal logic detected on this page.";
                 html = `
                     <div class="bg-slate-900 p-8 rounded-[32px] text-white">
                         <h4 class="text-[9px] font-black text-blue-400 uppercase mb-3 tracking-widest">Logic & Causality</h4>
                         <p class="text-xs leading-relaxed opacity-90">${logicPoint}.</p>
                         <div class="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
-                            <span class="text-[9px] font-bold text-blue-400">CONTEXTUAL LINK</span>
-                            <span class="text-[9px] opacity-40 uppercase tracking-widest">Ver. 2.1 Engine</span>
+                            <span class="text-[9px] font-bold text-blue-400 uppercase tracking-widest">Contextual Link</span>
+                            <span class="text-[9px] opacity-40 uppercase tracking-widest">Ver. 2.5 Engine</span>
                         </div>
                     </div>`;
             } 
             else {
-                // MASTERY MODE: High-Utility Quiz based on Dates or Definitions
-                const questionBasis = definitions[0] || `The events mentioned on Page ${page.num}`;
                 const choices = [
                     { t: primaryPoint, c: true },
                     { t: "This section primarily focuses on unrelated statistical data.", c: false }
@@ -64,14 +60,14 @@ document.getElementById('analyzeBtn').onclick = async () => {
                 <div class="flex items-center justify-between mb-8">
                     <div class="flex items-center gap-3">
                         <div class="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
-                        <span class="text-[10px] font-black text-slate-900 uppercase tracking-widest">Data Stream: Page ${page.num}</span>
+                        <span class="text-[10px] font-black text-slate-900 uppercase tracking-widest tracking-tighter">Data Stream: Page ${page.num}</span>
                     </div>
                 </div>
                 ${html}`;
             out.appendChild(card);
         });
         
-        // Save to History
         saveHistory(document.getElementById('fileNameDisplay').innerText);
     }, 1000);
 };
+</script>
