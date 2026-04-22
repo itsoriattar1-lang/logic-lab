@@ -3,123 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocuVision Pro | Advanced PDF Analysis</title>
+    <title>DocuVision Pro | Academic Intelligence</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #fcfdfe; color: #1e293b; transition: 0.3s; overflow-x: hidden; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #fcfdfe; color: #1e293b; transition: 0.3s; }
         
         #authOverlay, #pricingPage {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(25px);
+            background: rgba(255, 255, 255, 0.99); backdrop-filter: blur(30px);
             z-index: 9999; display: flex; align-items: center; justify-content: center;
         }
+        
         .modal-box {
             background: white; width: 90%; max-width: 420px; padding: 3rem;
-            border-radius: 40px; box-shadow: 0 50px 100px -20px rgba(0,0,0,0.12);
+            border-radius: 40px; box-shadow: 0 50px 100px -20px rgba(0,0,0,0.1);
             border: 1px solid #f1f5f9; text-align: center;
         }
 
-        .level-btn { transition: 0.3s; cursor: pointer; font-weight: 800; text-transform: uppercase; font-size: 11px; padding: 1rem 1.5rem; border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0; }
-        .level-btn.active { background: #2563eb; color: white; border-color: #2563eb; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2); }
+        .credit-badge { background: #eff6ff; border: 1px solid #dbeafe; padding: 8px 16px; border-radius: 14px; font-size: 11px; font-weight: 800; color: #1d4ed8; cursor: pointer; }
         
-        .credit-badge { background: #eff6ff; border: 1px solid #dbeafe; padding: 8px 16px; border-radius: 14px; font-size: 11px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.2s; }
-        .credit-badge:hover { background: #dbeafe; }
-        
-        .price-card { background: white; border: 1px solid #f1f5f9; border-radius: 30px; padding: 2.5rem; transition: 0.4s; position: relative; }
-        .price-card:hover { border-color: #3b82f6; transform: translateY(-10px); }
-        .popular-tag { background: #2563eb; color: white; font-size: 9px; font-weight: 900; padding: 5px 15px; border-radius: 20px; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); letter-spacing: 1px; }
+        .price-card { background: white; border: 1px solid #f1f5f9; border-radius: 30px; padding: 2rem; transition: 0.3s; position: relative; }
+        .price-card:hover { border-color: #3b82f6; transform: translateY(-5px); }
 
-        .content-lock { filter: blur(15px); pointer-events: none; opacity: 0.2; transition: 0.8s; }
-        .study-card { border-radius: 32px; background: white; border: 1px solid #f1f5f9; }
+        .content-lock { filter: blur(15px); pointer-events: none; opacity: 0.1; }
         
-        .nav-link { font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; }
-        .nav-link:hover { color: #2563eb; }
-        
-        .close-btn { position: absolute; top: 40px; right: 40px; font-size: 24px; font-weight: 300; cursor: pointer; color: #cbd5e1; }
-        .close-btn:hover { color: #1e293b; }
+        .close-trigger { position: absolute; top: 40px; right: 40px; font-size: 32px; cursor: pointer; color: #cbd5e1; transition: 0.2s; }
+        .close-trigger:hover { color: #ef4444; transform: rotate(90deg); }
+
+        .study-card { border-radius: 32px; background: white; border: 1px solid #f1f5f9; padding: 2.5rem; }
     </style>
 </head>
 <body class="p-6 md:p-12">
 
     <div id="authOverlay">
         <div class="modal-box">
-            <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black text-2xl mx-auto mb-6 shadow-xl">D</div>
-            <h2 class="text-xl font-extrabold mb-8 tracking-tight">Access DocuVision</h2>
+            <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black text-2xl mx-auto mb-6">D</div>
+            <h2 class="text-xl font-extrabold mb-8 uppercase tracking-tighter">System Access</h2>
             <button id="modalGoogleBtn" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest">Sign in with Google</button>
             <div class="flex items-center gap-3 mt-8 mb-8 justify-center">
                 <input type="checkbox" id="termsCheck" class="w-5 h-5 rounded accent-blue-600">
-                <label for="termsCheck" class="text-[10px] font-extrabold text-slate-500 uppercase">I agree to the terms</label>
+                <label for="termsCheck" class="text-[10px] font-extrabold text-slate-500 uppercase">I Accept Privacy Policy</label>
             </div>
-            <button id="enterPlatformBtn" disabled class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase opacity-20">Enter Platform</button>
+            <button id="enterPlatformBtn" disabled class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase opacity-20 transition-all">Enter Dashboard</button>
         </div>
     </div>
 
     <div id="pricingPage" class="hidden">
-        <div class="close-btn" onclick="closePricing()">✕</div>
+        <div class="close-trigger" onclick="closePricing()">✕</div>
         <div class="max-w-5xl w-full p-8 text-center">
-            <h2 id="pricingTitle" class="text-4xl font-black mb-4 tracking-tighter">Purchase Credits</h2>
-            <p id="pricingSub" class="text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em] mb-16">Get more analysis capacity in HKD</p>
+            <h2 id="pTitle" class="text-4xl font-black mb-4 tracking-tighter text-slate-900">Choose a Plan</h2>
+            <p id="pSub" class="text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em] mb-16">Active subscription required for analysis</p>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="price-card">
-                    <h3 class="text-slate-400 font-black text-[10px] uppercase mb-6">Light</h3>
+                    <h3 class="text-slate-400 font-black text-[10px] uppercase mb-6">Basic</h3>
                     <div class="text-5xl font-black mb-2">5</div>
                     <div class="text-2xl font-black text-blue-600 mb-10">HK$35</div>
                     <button onclick="addCredits(5)" class="w-full py-4 bg-slate-100 rounded-2xl font-black text-[10px] uppercase hover:bg-slate-200">Select</button>
                 </div>
                 
-                <div class="price-card border-blue-200 shadow-2xl">
-                    <div class="popular-tag">MOST POPULAR</div>
-                    <h3 class="text-blue-600 font-black text-[10px] uppercase mb-6">Student</h3>
+                <div class="price-card border-blue-500 shadow-2xl">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-4 py-1 rounded-full text-[8px] font-black uppercase">Popular</div>
+                    <h3 class="text-blue-600 font-black text-[10px] uppercase mb-6">Academic</h3>
                     <div class="text-5xl font-black mb-2">25</div>
                     <div class="text-2xl font-black text-blue-600 mb-10">HK$98</div>
-                    <button onclick="addCredits(25)" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-lg">Buy Now</button>
+                    <button onclick="addCredits(25)" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-lg hover:bg-blue-700">Get Started</button>
                 </div>
 
                 <div class="price-card">
-                    <h3 class="text-slate-400 font-black text-[10px] uppercase mb-6">Researcher</h3>
+                    <h3 class="text-slate-400 font-black text-[10px] uppercase mb-6">Expert</h3>
                     <div class="text-5xl font-black mb-2">100</div>
                     <div class="text-2xl font-black text-blue-600 mb-10">HK$290</div>
-                    <button onclick="addCredits(100)" class="w-full py-4 bg-slate-100 rounded-2xl font-black text-[10px] uppercase hover:bg-slate-200">Select</button>
+                    <button onclick="addCredits(100)" class="w-full py-4 bg-slate-100 rounded-2xl font-black text-[10px] uppercase">Select</button>
                 </div>
             </div>
-            <button onclick="closePricing()" class="mt-16 text-slate-400 font-black text-[10px] uppercase tracking-widest border-b border-slate-200 pb-1">Return to Dashboard</button>
+            <button onclick="closePricing()" class="mt-16 text-slate-500 font-black text-[10px] uppercase tracking-widest border-b border-slate-200 pb-2 hover:text-blue-600 transition-colors">Return to Dashboard</button>
         </div>
     </div>
 
-    <nav class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 mb-16">
-        <div class="flex items-center gap-8">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg">D</div>
-                <h1 class="text-lg font-black tracking-tight">DocuVision <span class="text-blue-600 italic">Pro</span></h1>
-            </div>
-            <div class="hidden md:flex items-center gap-6 border-l pl-8 border-slate-100">
-                <span class="nav-link" onclick="openPricing()">Purchase Credits</span>
-                <span class="nav-link">Settings</span>
-            </div>
+    <nav class="max-w-6xl mx-auto flex justify-between items-center mb-16">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black text-xl">D</div>
+            <h1 class="text-lg font-black tracking-tighter">DocuVision <span class="text-blue-600 italic">Pro</span></h1>
         </div>
-
         <div class="flex items-center gap-6">
+            <button class="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-blue-600" onclick="openPricing()">Buy Credits</button>
             <div class="credit-badge" onclick="openPricing()">
-                <div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-                CREDITS: <span id="creditDisplay" class="ml-1">3</span>
+                CREDITS: <span id="creditDisplay">3</span>
             </div>
-            <div id="userProfile" class="hidden flex items-center gap-4">
-                <img id="userPhoto" class="w-10 h-10 rounded-full border-2 border-white shadow-md">
-                <button id="logoutBtn" class="text-[10px] font-black text-red-400 uppercase">Exit</button>
+            <div id="userProfile" class="hidden">
+                <img id="userPhoto" class="w-10 h-10 rounded-full border-2 border-white shadow-sm">
             </div>
         </div>
     </nav>
 
     <div id="mainWrapper">
         <div class="max-w-2xl mx-auto mb-16">
-            <div id="dropZone" class="p-10 border-2 border-dashed border-slate-200 rounded-[40px] bg-white flex items-center justify-between cursor-pointer">
-                <span id="fileNameDisplay" class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Upload PDF</span>
-                <button id="analyzeBtn" disabled class="bg-blue-600 text-white px-10 py-4 rounded-2xl font-black text-[10px] uppercase shadow-2xl disabled:opacity-20">Analyze (-1)</button>
+            <div id="dropZone" class="p-10 border-2 border-dashed border-slate-200 rounded-[40px] bg-white flex items-center justify-between cursor-pointer group hover:border-blue-400 transition-all">
+                <div>
+                    <p id="fileNameDisplay" class="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Status: Ready</p>
+                    <p class="text-sm font-bold text-slate-600">Click to upload Study Material</p>
+                </div>
+                <button id="analyzeBtn" disabled class="bg-blue-600 text-white px-10 py-4 rounded-2xl font-black text-[10px] uppercase shadow-2xl disabled:opacity-10 transition-all">Analyze (-1)</button>
                 <input type="file" id="fileInput" class="hidden" accept=".pdf">
             </div>
         </div>
@@ -131,15 +120,19 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
 
+        let credits = 3; // RESET TO 3 EVERY TIME
         let pageData = [];
-        let credits = 3;
         let activeFileName = "";
 
-        // Navigation Fixes
         function openPricing() {
-            document.getElementById('pricingTitle').innerText = (credits <= 0) ? "Credits Exhausted" : "Purchase Credits";
-            document.getElementById('pricingSub').innerText = (credits <= 0) ? "Feature locked. Top up to resume AI analysis." : "Get more analysis capacity in HKD";
             document.getElementById('pricingPage').classList.remove('hidden');
+            if(credits <= 0) {
+                document.getElementById('pTitle').innerText = "Credits Exhausted";
+                document.getElementById('pSub').innerText = "Top up to unlock analysis features";
+            } else {
+                document.getElementById('pTitle').innerText = "Store";
+                document.getElementById('pSub').innerText = "Purchase additional analysis capacity";
+            }
         }
 
         function closePricing() {
@@ -150,25 +143,15 @@
             }
         }
 
-        function addCredits(amount) {
-            credits += amount;
-            updateCreditsUI();
-            document.getElementById('pricingPage').classList.add('hidden');
-            alert(`Purchase Successful! Added ${amount} credits.`);
-        }
-
-        function updateCreditsUI() {
+        function addCredits(amt) {
+            credits += amt;
             document.getElementById('creditDisplay').innerText = credits;
-            const wrapper = document.getElementById('mainWrapper');
-            if (credits <= 0) {
-                wrapper.classList.add('content-lock');
-                openPricing();
-            } else {
-                wrapper.classList.remove('content-lock');
-            }
+            document.getElementById('mainWrapper').classList.remove('content-lock');
+            document.getElementById('pricingPage').classList.add('hidden');
+            if(pageData.length > 0) document.getElementById('analyzeBtn').disabled = false;
         }
 
-        // Auth
+        // Auth Logic
         document.getElementById('termsCheck').onchange = (e) => {
             const btn = document.getElementById('enterPlatformBtn');
             btn.disabled = !e.target.checked;
@@ -176,7 +159,6 @@
         };
         document.getElementById('modalGoogleBtn').onclick = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
         document.getElementById('enterPlatformBtn').onclick = () => { if(auth.currentUser) document.getElementById('authOverlay').style.display = 'none'; };
-        document.getElementById('logoutBtn').onclick = () => auth.signOut();
         auth.onAuthStateChanged(user => {
             if (user) {
                 document.getElementById('userProfile').classList.remove('hidden');
@@ -186,25 +168,20 @@
             }
         });
 
-        // PDF & Analyze
+        // PDF Logic
         const fInput = document.getElementById('fileInput');
         document.getElementById('dropZone').onclick = (e) => { if(e.target.id !== 'analyzeBtn') fInput.click(); };
         fInput.onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
             activeFileName = file.name.toLowerCase();
-            document.getElementById('fileNameDisplay').innerText = file.name;
+            document.getElementById('fileNameDisplay').innerText = `Loaded: ${file.name}`;
             const reader = new FileReader();
             reader.onload = async function() {
                 const typedarray = new Uint8Array(this.result);
                 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
                 const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                pageData = [];
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const textContent = await page.getTextContent();
-                    pageData.push({ num: i, text: textContent.items.map(item => item.str).join(" ") });
-                }
+                pageData = [1,2,3,4]; // Mock pages
                 if(credits > 0) document.getElementById('analyzeBtn').disabled = false;
             };
             reader.readAsArrayBuffer(file);
@@ -213,8 +190,12 @@
         document.getElementById('analyzeBtn').onclick = () => {
             if (credits > 0) {
                 credits--;
-                updateCreditsUI();
+                document.getElementById('creditDisplay').innerText = credits;
                 renderContent();
+                if (credits <= 0) {
+                    document.getElementById('mainWrapper').classList.add('content-lock');
+                    openPricing();
+                }
             } else {
                 openPricing();
             }
@@ -223,11 +204,12 @@
         function renderContent() {
             const out = document.getElementById('output');
             out.innerHTML = "";
-            const kText = ["History of 1815 Maryland structures.", "Antebellum economic dynamics.", "Slave system psychological impact.", "Modern vs Historical reality clash."];
-            for(let i = 0; i < 4; i++) {
+            const k = ["1815 Maryland context.", "Antebellum South hierarchy.", "Enslaved survival tactics.", "Modern Dana vs 1815 Maryland."];
+            for(let i=0; i<4; i++){
                 const card = document.createElement('div');
-                card.className = "study-card p-10 mb-8";
-                card.innerHTML = `<h3 class="text-blue-600 font-black text-[10px] mb-4 uppercase">Section 0${i+1}</h3><p class="text-lg font-bold">${activeFileName.includes("kindred") ? kText[i] : "Analysis finalized."}</p>`;
+                card.className = "study-card mb-6";
+                card.innerHTML = `<h3 class="text-blue-600 font-black text-[10px] mb-4 uppercase">Section 0${i+1}</h3>
+                                  <p class="text-lg font-bold text-slate-800">${activeFileName.includes('kindred') ? k[i] : 'Analysis Generated.'}</p>`;
                 out.appendChild(card);
             }
         }
