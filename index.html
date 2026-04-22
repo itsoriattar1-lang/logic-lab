@@ -12,6 +12,24 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #fcfdfe; color: #1e293b; }
+        
+        /* AUTH MODAL STYLES */
+        #authOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px);
+            z-index: 9999; display: flex; align-items: center; justify-content: center;
+        }
+        .modal-box {
+            background: white; width: 90%; max-width: 420px; padding: 3rem;
+            border-radius: 40px; box-shadow: 0 50px 100px -20px rgba(0,0,0,0.12);
+            border: 1px solid #f1f5f9; text-align: center;
+        }
+        .login-option {
+            width: 100%; padding: 1.1rem; border-radius: 16px; font-weight: 800;
+            text-transform: uppercase; font-size: 10px; letter-spacing: 0.1em;
+            transition: 0.3s; margin-bottom: 0.8rem; display: flex; align-items: center; justify-content: center;
+        }
+
         .study-card { border-radius: 32px; background: white; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: 0.3s ease; }
         .level-btn { transition: 0.3s; cursor: pointer; font-weight: 800; text-transform: uppercase; font-size: 11px; padding: 1rem 1.5rem; border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0; }
         .level-btn.active { background: #2563eb; color: white; border-color: #2563eb; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2); }
@@ -22,6 +40,26 @@
     </style>
 </head>
 <body class="p-6 md:p-12">
+
+    <div id="authOverlay">
+        <div class="modal-box">
+            <div class="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black text-xl mx-auto mb-6 shadow-lg">D</div>
+            <h2 class="text-xl font-black mb-2 tracking-tight text-slate-900 uppercase">System Access</h2>
+            <p class="text-slate-400 font-bold text-[9px] uppercase tracking-[0.2em] mb-8">Professional Document Intelligence</p>
+            
+            <button id="modalGoogleBtn" class="login-option bg-slate-900 text-white hover:bg-black">Sign in with Google</button>
+            <button class="login-option border border-slate-200 text-slate-400 cursor-not-allowed opacity-60">Email & Password</button>
+            
+            <p class="text-[8px] font-black text-slate-300 uppercase italic mt-2 mb-8">Working on adding more login options...</p>
+            
+            <div class="flex items-center gap-3 mb-8 justify-start">
+                <input type="checkbox" id="termsCheck" class="w-5 h-5 rounded accent-blue-600 cursor-pointer">
+                <label for="termsCheck" class="text-[10px] font-extrabold text-slate-500 cursor-pointer uppercase tracking-tight">I agree to terms & conditions</label>
+            </div>
+
+            <button id="enterPlatformBtn" disabled class="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl opacity-20 transition-all">Enter Platform</button>
+        </div>
+    </div>
 
     <nav class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 mb-12">
         <div class="flex items-center gap-4">
@@ -36,7 +74,6 @@
         </div>
 
         <div id="authSection" class="flex items-center gap-4">
-            <button id="loginBtn" class="bg-slate-900 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg">Sign In</button>
             <div id="userProfile" class="hidden flex items-center gap-3">
                 <img id="userPhoto" class="w-10 h-10 rounded-full border-2 border-white shadow-md">
                 <button id="logoutBtn" class="text-[10px] font-bold text-red-400 uppercase">Exit</button>
@@ -65,22 +102,40 @@
         let currentLevel = "l1";
         const HF_TOKEN = "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";
 
-        // AUTH LOGIC
+        // GATEWAY LOGIC
+        const termsCheck = document.getElementById('termsCheck');
+        const enterPlatformBtn = document.getElementById('enterPlatformBtn');
+        const authOverlay = document.getElementById('authOverlay');
+
+        termsCheck.onchange = () => {
+            enterPlatformBtn.disabled = !termsCheck.checked;
+            enterPlatformBtn.style.opacity = termsCheck.checked ? "1" : "0.2";
+        };
+
+        document.getElementById('modalGoogleBtn').onclick = () => {
+            if(!termsCheck.checked) return alert("Please accept the terms and conditions.");
+            auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+        };
+
+        enterPlatformBtn.onclick = () => {
+            if(!auth.currentUser) alert("Please sign in to proceed.");
+            else authOverlay.style.display = 'none';
+        };
+
         auth.onAuthStateChanged(user => {
             if (user) {
-                document.getElementById('loginBtn').classList.add('hidden');
                 document.getElementById('userProfile').classList.remove('hidden');
                 document.getElementById('userPhoto').src = user.photoURL;
+                if(termsCheck.checked) authOverlay.style.display = 'none';
             } else {
-                document.getElementById('loginBtn').classList.remove('hidden');
                 document.getElementById('userProfile').classList.add('hidden');
+                authOverlay.style.display = 'flex';
             }
         });
 
-        document.getElementById('loginBtn').onclick = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
         document.getElementById('logoutBtn').onclick = () => auth.signOut();
 
-        // UI LOGIC
+        // UI LOGIC (RESTORED FROM PREVIOUS SCRIPT)
         document.querySelectorAll('.level-btn').forEach(btn => {
             btn.onclick = () => {
                 document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
