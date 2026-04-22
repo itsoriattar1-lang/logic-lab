@@ -2,78 +2,95 @@ function renderContent(data) {
     const out = document.getElementById('output');
     out.innerHTML = "";
     
-    // SKIPPING PAGE 1 to avoid title/table-of-contents noise
+    // RULE 1: STRICT SKIP OF PAGE 1
     const realData = data.slice(1);
-    const allSentences = data.flatMap(p => p.text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 40));
+    
+    // Global sentence pool for high-quality quiz distractors
+    const allSentences = data.flatMap(p => p.text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 50));
 
     realData.forEach((page, index) => {
-        const sentences = page.text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 25);
+        // CLEANING & EXTRACTION
+        const rawSentences = page.text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 30);
         
-        // --- IMPROVED CONTEXT BUILDER ---
-        // Identifies the main subject (Topic A) and supporting detail (Topic B)
-        const cleanTopic = (str) => {
-            if (!str) return "key thematic elements";
-            return str.split(' ').slice(0, 8).join(' ').replace(/[,.;:]$/, ""); 
+        // Helper to build clean, professional headers
+        const getContextFragment = (sentence, wordCount) => {
+            if (!sentence) return "this specialized section";
+            return sentence.split(' ').slice(0, wordCount).join(' ').replace(/[,.;:]$/, "");
         };
 
-        const topicA = cleanTopic(sentences[0]);
-        const topicB = cleanTopic(sentences[1] || sentences[0]);
-        const logicPoint = sentences.find(s => s.match(/because|since|therefore|result|however|witnessed/i)) || sentences[0];
+        const primaryThesis = getContextFragment(rawSentences[0], 10);
+        const supportingDetail = rawSentences[1] ? getContextFragment(rawSentences[1], 12) : "additional thematic evidence";
+        const logicChain = rawSentences.find(s => s.match(/because|since|therefore|resulted|consequently|witnessed/i)) || rawSentences[0];
 
         const card = document.createElement('div');
-        card.className = "study-card p-12 mb-10 shadow-sm border border-slate-50 bg-white animate-in fade-in slide-in-from-bottom-4";
+        card.className = "study-card p-12 mb-12 shadow-sm border border-slate-100 bg-white animate-in fade-in slide-in-from-bottom-4";
         
-        let inner = "";
-        
-        // Mode 1: Deep Thematic Summary (Added more context here)
+        let contentHTML = "";
+
+        // MODE 1: DEEP SUMMARY & SECTION CONTEXT
         if (currentLevel === "l1") {
-            inner = `
-                <div class="mb-8">
-                    <h4 class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-4">Thematic Overview</h4>
-                    <p class="text-slate-700 text-[15px] font-medium leading-relaxed border-l-4 border-blue-600 pl-6 mb-6">
-                        This page primarily explores the concepts of **${topicA}** while detailing the specific nuances of **${topicB}**.
-                    </p>
-                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Contextual Significance</h4>
-                    <p class="text-slate-500 text-[13px] leading-relaxed italic">
-                        This section serves to bridge the previous discussion with a focused look at ${topicA}, establishing the evidentiary foundation for the arguments that follow.
-                    </p>
-                </div>`;
-        } 
-        
-        // Mode 2: Causal Logic Breakdown
-        else if (currentLevel === "l2") {
-            inner = `
-                <div class="bg-slate-900 p-10 rounded-[40px] text-white">
-                    <h4 class="text-[10px] font-black text-blue-400 uppercase mb-6 tracking-widest">Logic & Causality</h4>
-                    <p class="text-[12px] opacity-60 mb-6 italic italic">Focusing on why these events occurred:</p>
-                    <div class="bg-white/5 p-6 rounded-2xl border border-white/10">
-                        <p class="text-sm font-bold leading-relaxed text-blue-50">${logicPoint}.</p>
+            contentHTML = `
+                <div class="space-y-8">
+                    <div>
+                        <h4 class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-4">Thematic Overview</h4>
+                        <p class="text-slate-800 text-[16px] font-semibold leading-relaxed border-l-4 border-blue-600 pl-6">
+                            This section primarily examines **${primaryThesis}...** while offering a detailed look into **${supportingDetail}...**
+                        </p>
+                    </div>
+                    <div class="bg-slate-50 p-8 rounded-[30px] border border-slate-100">
+                        <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Academic Context</h4>
+                        <p class="text-slate-600 text-[13px] leading-relaxed italic">
+                            By focusing on ${primaryThesis}, this page establishes a critical link between the core narrative and the supporting facts found in ${supportingDetail}. This provides the reader with a comprehensive understanding of the section's objectives.
+                        </p>
                     </div>
                 </div>`;
         } 
-        
-        // Mode 3: Mastery Challenge
-        else {
-            const correct = sentences[0] || "Primary textual evidence.";
-            const wrong = allSentences.filter(s => !s.includes(topicA))[Math.floor(Math.random() * 8)] || "Related background info.";
-            const choices = [{ t: correct, c: true }, { t: wrong, c: false }].sort(() => Math.random() - 0.5);
 
-            inner = `
-                <p class="text-[11px] font-bold text-slate-400 mb-8 uppercase tracking-widest italic">Verifying: ${topicA}</p>
-                <div class="space-y-4">
-                    ${choices.map(o => `
-                        <div class="quiz-opt" onclick="this.style.borderColor='${o.c ? '#10b981' : '#ef4444'}'; this.style.background='${o.c ? '#f0fdf4' : '#fef2f2'}';">
-                            <div class="w-6 h-6 rounded-full border-2 border-slate-200 mt-0.5 flex-shrink-0 flex items-center justify-center text-[10px] font-bold">?</div>
-                            <p class="text-slate-600 font-semibold leading-relaxed">${o.t}</p>
-                        </div>`).join('')}
+        // MODE 2: CAUSAL LOGIC BREAKDOWN
+        else if (currentLevel === "l2") {
+            contentHTML = `
+                <div class="bg-slate-900 p-10 rounded-[40px] text-white shadow-2xl">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                        <h4 class="text-[10px] font-black text-blue-400 uppercase tracking-widest">Logic & Development</h4>
+                    </div>
+                    <p class="text-[12px] text-slate-400 mb-6 italic">Analyzing the causal relationships within this page:</p>
+                    <div class="bg-white/10 p-8 rounded-3xl border border-white/10">
+                        <p class="text-[15px] font-bold leading-relaxed text-blue-50">${logicChain}.</p>
+                    </div>
+                </div>`;
+        } 
+
+        // MODE 3: MASTERY & EVIDENCE VERIFICATION
+        else {
+            const correctClaim = rawSentences[0] || "Confirmed textual evidence.";
+            const distractor = allSentences.filter(s => !s.includes(primaryThesis))[Math.floor(Math.random() * 10)] || "General background information.";
+            const options = [{ text: correctClaim, isCorrect: true }, { text: distractor, isCorrect: false }].sort(() => Math.random() - 0.5);
+
+            contentHTML = `
+                <div class="space-y-6">
+                    <div class="mb-8">
+                        <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Evidence-Based Challenge</h4>
+                        <p class="text-sm font-bold text-slate-800 italic">Topic: ${primaryThesis}</p>
+                    </div>
+                    <p class="text-xs font-bold text-slate-600 mb-6">Which of these specific assertions is directly supported by the text on Page ${page.num}?</p>
+                    <div class="space-y-4">
+                        ${options.map(opt => `
+                            <div class="quiz-opt group border-2 border-slate-50 hover:border-blue-500 hover:bg-blue-50/20" 
+                                 onclick="this.style.borderColor='${opt.isCorrect ? '#10b981' : '#ef4444'}'; this.style.background='${opt.isCorrect ? '#f0fdf4' : '#fef2f2'}';">
+                                <div class="w-6 h-6 rounded-full border-2 border-slate-200 mt-0.5 group-hover:border-blue-500 flex-shrink-0 flex items-center justify-center text-[10px] font-bold group-hover:text-blue-500">?</div>
+                                <p class="text-slate-600 font-semibold leading-relaxed">${opt.text}</p>
+                            </div>`).join('')}
+                    </div>
                 </div>`;
         }
 
         card.innerHTML = `
             <div class="flex justify-between items-center mb-10 text-[10px] font-black uppercase tracking-widest text-slate-400">
                 <span class="bg-blue-600 text-white px-5 py-2 rounded-full shadow-lg shadow-blue-100">PAGE ${page.num}</span>
-                <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div> Engine Verified Thread</div>
-            </div>${inner}`;
+                <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div> Verified Analysis Thread</div>
+            </div>
+            ${contentHTML}`;
         out.appendChild(card);
     });
 }
