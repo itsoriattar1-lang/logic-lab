@@ -3,69 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocuVision | Pro Narrative</title>
+    <title>DocuVision | Deep Logic Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
-        body { overflow-x: hidden; width: 100vw; }
+        body { overflow-x: hidden; width: 100vw; background: #fcfdfe; }
         .study-card { border-radius: 45px; background: white; border: 1px solid #f1f5f9; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .study-card:hover { transform: translateY(-5px); box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.08); }
-        .level-btn { transition: 0.3s; border: 1px solid #e2e8f0; cursor: pointer; }
-        .level-btn.active { background: #2563eb; color: white; border-color: #2563eb; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4); }
+        .study-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.05); }
+        .level-btn { transition: 0.3s; border: 1px solid #e2e8f0; cursor: pointer; white-space: nowrap; }
+        .level-btn.active { background: #2563eb; color: white; border-color: #2563eb; box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.3); }
         .quiz-opt { cursor: pointer; transition: 0.2s; border: 2px solid #f8fafc; border-radius: 24px; padding: 1.5rem; display: flex; align-items: start; gap: 15px; margin-bottom: 1rem; }
-        .history-item { cursor: pointer; transition: 0.2s; border-radius: 15px; margin-bottom: 10px; border: 1px solid #f1f5f9; padding: 1rem; background: white; font-size: 10px; font-weight: 800; text-transform: uppercase; }
-        .history-item:hover { background: #f8fafc; border-color: #3b82f6; transform: translateX(8px); }
-        #historyList::-webkit-scrollbar { width: 4px; }
-        #historyList::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .history-item { cursor: pointer; transition: 0.2s; border-radius: 15px; margin-bottom: 8px; border: 1px solid #f1f5f9; padding: 1rem; background: white; font-size: 10px; font-weight: 800; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; }
+        .history-item:hover { background: #f8fafc; border-color: #3b82f6; transform: translateX(5px); }
+        aside { scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-[#fcfdfe] min-h-screen font-sans text-slate-900 flex flex-col">
+<body class="min-h-screen font-sans text-slate-900 flex flex-col">
 
     <header class="h-24 bg-white border-b flex justify-between items-center px-12 sticky top-0 z-50">
         <div class="flex items-center gap-5 cursor-pointer" onclick="location.reload()">
-            <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg">DV</div>
+            <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-blue-100">DV</div>
             <div>
                 <h1 class="text-xs font-black uppercase tracking-tighter italic leading-none">DocuVision</h1>
-                <p class="text-[9px] font-bold text-blue-600 uppercase tracking-[0.2em] mt-1">Professional Edition</p>
+                <p class="text-[9px] font-bold text-blue-600 uppercase tracking-[0.2em] mt-1">Advanced Analytics</p>
             </div>
         </div>
         <div id="userProfile" class="hidden flex items-center gap-4">
-            <button id="logoutBtn" class="text-[9px] font-black text-slate-400 uppercase">Sign Out</button>
+            <button id="logoutBtn" class="text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-red-500">Log Out</button>
             <img id="userPhoto" class="w-11 h-11 rounded-full border-2 border-white shadow-md">
         </div>
-        <button id="loginBtn" class="bg-slate-900 text-white px-8 py-3 rounded-full text-[11px] font-black uppercase tracking-widest hover:bg-blue-600 shadow-xl shadow-slate-200">Authenticate</button>
+        <button id="loginBtn" class="bg-slate-900 text-white px-8 py-3 rounded-full text-[11px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all">Sign In</button>
     </header>
 
     <div class="flex flex-1 overflow-hidden">
-        <aside class="w-72 flex-shrink-0 bg-white border-r flex flex-col p-10 hidden lg:flex">
-            <h3 class="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] mb-10">Library Archive</h3>
-            <div id="historyList" class="flex-1 overflow-y-auto"></div>
+        <aside class="w-64 flex-shrink-0 bg-white border-r flex flex-col p-8 hidden lg:flex">
+            <h3 class="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] mb-8">Personal Archive</h3>
+            <div id="historyList" class="flex-1 overflow-y-auto pr-2"></div>
         </aside>
 
-        <main class="flex-1 overflow-y-auto p-12 bg-[#f8fafc]/40">
+        <main class="flex-1 overflow-y-auto p-10 bg-[#f8fafc]/50">
             <div class="max-w-5xl mx-auto">
-                <div class="grid grid-cols-1 xl:grid-cols-3 gap-10 mb-16">
-                    <div id="dropZone" class="p-10 border-2 border-dashed border-slate-200 rounded-[45px] bg-white flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 group transition-all">
-                        <p id="fileNameDisplay" class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Upload PDF Source</p>
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-8 mb-12">
+                    <div id="dropZone" class="p-10 border-2 border-dashed border-slate-200 rounded-[40px] bg-white flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 transition-all">
+                        <p id="fileNameDisplay" class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Upload Source</p>
                         <input type="file" id="fileInput" class="hidden" accept=".pdf">
                     </div>
                     
-                    <div class="xl:col-span-2 bg-white p-10 rounded-[45px] border border-slate-100 flex flex-col justify-between shadow-sm">
-                        <div class="flex justify-between items-center">
-                            <div class="flex gap-4">
-                                <button class="level-btn active px-8 py-4 rounded-2xl text-[11px] font-black uppercase" id="l1">Level 1: Summary</button>
-                                <button class="level-btn px-8 py-4 rounded-2xl text-[11px] font-black uppercase" id="l2">Level 2: Logic</button>
-                                <button class="level-btn px-8 py-4 rounded-2xl text-[11px] font-black uppercase" id="l3">Level 3: Mastery</button>
-                            </div>
-                            <button id="analyzeBtn" disabled class="bg-blue-600 text-white px-12 py-5 rounded-[25px] font-black text-xs uppercase shadow-2xl shadow-blue-200 disabled:opacity-20 transition-all hover:scale-105 active:scale-95">Analyze</button>
+                    <div class="xl:col-span-2 bg-white p-8 rounded-[40px] border border-slate-100 flex flex-wrap items-center justify-between shadow-sm">
+                        <div class="flex gap-3">
+                            <button class="level-btn active px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase" id="l1">Level 1: Summary</button>
+                            <button class="level-btn px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase" id="l2">Level 2: Logic</button>
+                            <button class="level-btn px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase" id="l3">Level 3: Mastery</button>
                         </div>
+                        <button id="analyzeBtn" disabled class="bg-blue-600 text-white px-12 py-4 rounded-2xl font-black text-[11px] uppercase shadow-xl shadow-blue-100 disabled:opacity-20 transition-all">Start Analysis</button>
                     </div>
                 </div>
 
-                <div id="output" class="space-y-16 pb-20"></div>
+                <div id="output" class="space-y-12 pb-20"></div>
             </div>
         </main>
     </div>
@@ -129,75 +126,75 @@
             reader.readAsArrayBuffer(file);
         };
 
-        document.getElementById('analyzeBtn').onclick = () => {
-            renderContent(pageData);
-            saveToCloud();
-        };
+        document.getElementById('analyzeBtn').onclick = () => { renderContent(pageData); saveToCloud(); };
 
         function renderContent(data) {
             const out = document.getElementById('output');
             out.innerHTML = "";
-            const realData = data.slice(1); // STICKY RULE: SKIP PAGE 1
+            const analyzedPages = data.slice(1); // Skip Title Page
             const allSentences = data.flatMap(p => p.text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 50));
 
-            realData.forEach((page) => {
-                const raw = page.text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 35);
+            analyzedPages.forEach((page) => {
+                const sentences = page.text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 40);
                 
-                const getTopic = (list) => {
-                    if (!list.length) return "critical academic evidence";
-                    const target = list.slice(0, 3).reduce((a, b) => a.length > b.length ? a : b);
-                    const junk = ['this', 'page', 'section', 'talks', 'about', 'contains', 'covers'];
-                    return target.split(' ').filter(w => !junk.includes(w.toLowerCase())).slice(0, 10).join(' ').replace(/[,.;:]$/, "");
+                // Content Extraction Logic
+                const getMajorTopic = (list) => {
+                    if (!list.length) return "critical academic context";
+                    const sorted = [...list].sort((a,b) => b.length - a.length);
+                    const stopWords = ['this', 'page', 'section', 'talks', 'about', 'discusses', 'contains'];
+                    return sorted[0].split(' ').filter(w => !stopWords.includes(w.toLowerCase())).slice(0, 10).join(' ').replace(/[,.;:]$/, "");
                 };
 
-                const thesis = getTopic(raw);
-                const secondary = raw[3] ? getTopic(raw.slice(3)) : "related textual context";
-                const logic = raw.find(s => s.match(/because|since|therefore|resulted|consequently/i)) || raw[0];
+                const topic = getMajorTopic(sentences);
+                const support = sentences[sentences.length - 2] ? getMajorTopic([sentences[sentences.length - 2]]) : "foundational themes";
+                const logicChain = sentences.find(s => s.match(/because|since|therefore|impact|result|influence|led to/i)) || sentences[0];
 
                 const card = document.createElement('div');
-                card.className = "study-card p-14 mb-10 shadow-sm";
+                card.className = "study-card p-12 mb-10 shadow-sm border border-slate-50";
                 
-                let body = "";
+                let html = "";
                 if (currentLevel === "l1") {
-                    body = `
-                        <div class="space-y-10">
+                    html = `
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
                             <div>
-                                <h4 class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-4">Deep Thematic Summary</h4>
-                                <p class="text-slate-800 text-lg font-bold leading-relaxed border-l-4 border-blue-600 pl-8">
-                                    This section provides an extensive analysis of **${thesis}...**
+                                <h4 class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-4">Core Thesis</h4>
+                                <p class="text-slate-800 text-lg font-bold leading-relaxed border-l-4 border-blue-600 pl-6">
+                                    The primary focus of this page is the examination of **${topic}...**
                                 </p>
                             </div>
-                            <div class="bg-slate-50 p-8 rounded-[35px] border border-slate-100">
-                                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Contextual Relevance</h4>
-                                <p class="text-slate-600 text-[14px] leading-relaxed italic font-medium">
-                                    The text establishes this argument by cross-referencing <span class="text-slate-900">${secondary}</span>, ensuring the user understands the foundational evidence required for this page's conclusions.
+                            <div class="bg-slate-50 p-8 rounded-[35px] border border-slate-100 flex flex-col justify-center">
+                                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Supporting Evidence</h4>
+                                <p class="text-slate-600 text-sm leading-relaxed italic font-medium">
+                                    The author validates these points by detailing the relationship between the main theme and <span class="text-slate-900">${support}</span>.
                                 </p>
                             </div>
                         </div>`;
                 } else if (currentLevel === "l2") {
-                    body = `
-                        <div class="bg-slate-900 p-10 rounded-[40px] text-white shadow-xl">
-                            <h4 class="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-6">Causal Logic Flow</h4>
+                    html = `
+                        <div class="bg-slate-900 p-10 rounded-[45px] text-white">
+                            <h4 class="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-6">Causal Relationship Analysis</h4>
+                            <p class="text-slate-400 text-xs mb-4 italic italic">Extracted Logical Conclusion:</p>
                             <div class="bg-white/10 p-8 rounded-3xl border border-white/10">
-                                <p class="text-[17px] font-bold leading-relaxed text-blue-50">${logic}.</p>
+                                <p class="text-lg font-bold leading-relaxed text-blue-50">"${logicChain}."</p>
                             </div>
                         </div>`;
                 } else {
-                    const correct = raw[0] || "Validated claim.";
-                    const wrong = allSentences.filter(s => !s.includes(thesis.split(' ')[0]))[Math.floor(Math.random() * 10)] || "Note.";
-                    const choices = [{ t: correct, c: true }, { t: wrong, c: false }].sort(() => Math.random() - 0.5);
+                    const correct = sentences[0] || "Evidence-backed claim.";
+                    const distractor = allSentences.filter(s => !s.includes(topic.split(' ')[0]))[Math.floor(Math.random() * 10)] || "Reference data.";
+                    const options = [{ t: correct, c: true }, { t: distractor, c: false }].sort(() => Math.random() - 0.5);
 
-                    body = `
-                        <h4 class="text-[10px] font-black text-slate-400 uppercase mb-8 italic tracking-widest">Mastery Verification: ${thesis}</h4>
+                    html = `
+                        <h4 class="text-[10px] font-black text-slate-400 uppercase mb-8 italic tracking-widest">Evidence Check: ${topic}</h4>
+                        <p class="text-slate-800 font-bold mb-8">Which of these is a direct assertion made in this section?</p>
                         <div class="space-y-4">
-                            ${choices.map(o => `
+                            ${options.map(o => `
                                 <div class="quiz-opt" onclick="this.style.borderColor='${o.c ? '#10b981' : '#ef4444'}'; this.style.background='${o.c ? '#f0fdf4' : '#fef2f2'}';">
                                     <p class="text-slate-600 font-bold text-sm leading-relaxed">${o.t}</p>
                                 </div>`).join('')}
                         </div>`;
                 }
 
-                card.innerHTML = `<div class="flex items-center gap-4 mb-10"><span class="bg-blue-600 text-white px-5 py-2 rounded-full text-[10px] font-black uppercase shadow-lg">PAGE ${page.num}</span></div>${body}`;
+                card.innerHTML = `<div class="mb-8"><span class="bg-blue-600 text-white px-5 py-2 rounded-full text-[10px] font-black uppercase">PAGE ${page.num}</span></div>${html}`;
                 out.appendChild(card);
             });
         }
@@ -207,8 +204,7 @@
             if (user) {
                 await db.collection('users').doc(user.uid).collection('history').add({
                     fileName: document.getElementById('fileNameDisplay').innerText,
-                    data: pageData,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    data: pageData, timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 loadHistory(user.uid);
             }
@@ -220,7 +216,7 @@
             list.innerHTML = "";
             snap.forEach(doc => {
                 const item = document.createElement('div');
-                item.className = "history-item truncate";
+                item.className = "history-item";
                 item.innerText = doc.data().fileName;
                 item.onclick = () => { pageData = doc.data().data; renderContent(pageData); };
                 list.appendChild(item);
