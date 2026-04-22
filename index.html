@@ -29,13 +29,11 @@
         .price-card { background: white; border: 1px solid #f1f5f9; border-radius: 30px; padding: 2rem; transition: 0.3s; position: relative; }
         .price-card:hover { border-color: #3b82f6; transform: translateY(-5px); }
 
-        .content-lock { filter: blur(20px); pointer-events: none; opacity: 0.1; transition: 0.5s; }
-        
-        /* High-Visibility X Button */
+        /* Navigation Buttons on Pricing Page */
         .close-trigger { position: absolute; top: 40px; right: 40px; font-size: 32px; cursor: pointer; color: #cbd5e1; z-index: 10000; padding: 10px; }
-        .close-trigger:hover { color: #ef4444; }
+        .close-trigger:hover { color: #1e293b; }
 
-        .study-card { border-radius: 32px; background: white; border: 1px solid #f1f5f9; padding: 2.5rem; }
+        .study-card { border-radius: 32px; background: white; border: 1px solid #f1f5f9; padding: 2.5rem; margin-bottom: 2rem; }
     </style>
 </head>
 <body class="p-6 md:p-12">
@@ -55,34 +53,35 @@
 
     <div id="pricingPage" class="hidden">
         <div class="close-trigger" onclick="closePricing()">✕</div>
+        
         <div class="max-w-5xl w-full p-8 text-center">
-            <h2 id="pTitle" class="text-4xl font-black mb-4 tracking-tighter">Store</h2>
-            <p id="pSub" class="text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em] mb-16">Active subscription required for analysis</p>
+            <h2 class="text-4xl font-black mb-4 tracking-tighter text-slate-900">Purchase Credits</h2>
+            <p class="text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em] mb-16">Select a bundle to increase your analysis limit</p>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="price-card">
-                    <h3 class="text-slate-400 font-black text-[10px] uppercase mb-6">Basic</h3>
+                    <h3 class="text-slate-400 font-black text-[10px] uppercase mb-6">Starter</h3>
                     <div class="text-5xl font-black mb-2">5</div>
                     <div class="text-2xl font-black text-blue-600 mb-10">HK$35</div>
-                    <button onclick="addCredits(5)" class="w-full py-4 bg-slate-100 rounded-2xl font-black text-[10px] uppercase">Select</button>
+                    <button onclick="addCredits(5)" class="w-full py-4 bg-slate-100 rounded-2xl font-black text-[10px] uppercase hover:bg-slate-200">Select</button>
                 </div>
                 
                 <div class="price-card border-blue-500 shadow-2xl">
-                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-4 py-1 rounded-full text-[8px] font-black uppercase">Most Popular</div>
-                    <h3 class="text-blue-600 font-black text-[10px] uppercase mb-6">Academic</h3>
+                    <h3 class="text-blue-600 font-black text-[10px] uppercase mb-6">Student</h3>
                     <div class="text-5xl font-black mb-2">25</div>
                     <div class="text-2xl font-black text-blue-600 mb-10">HK$98</div>
                     <button onclick="addCredits(25)" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase">Buy Now</button>
                 </div>
 
                 <div class="price-card">
-                    <h3 class="text-slate-400 font-black text-[10px] uppercase mb-6">Expert</h3>
+                    <h3 class="text-slate-400 font-black text-[10px] uppercase mb-6">Researcher</h3>
                     <div class="text-5xl font-black mb-2">100</div>
                     <div class="text-2xl font-black text-blue-600 mb-10">HK$290</div>
                     <button onclick="addCredits(100)" class="w-full py-4 bg-slate-100 rounded-2xl font-black text-[10px] uppercase">Select</button>
                 </div>
             </div>
-            <button onclick="closePricing()" class="mt-16 text-slate-500 font-black text-[10px] uppercase tracking-widest border-b border-slate-200 pb-2">Return to Dashboard</button>
+            
+            <button onclick="closePricing()" class="mt-16 text-slate-500 font-black text-[10px] uppercase tracking-widest border-b border-slate-200 pb-2 hover:text-blue-600">Return to Dashboard</button>
         </div>
     </div>
 
@@ -92,28 +91,28 @@
             <h1 class="text-lg font-black tracking-tighter">DocuVision <span class="text-blue-600 italic">Pro</span></h1>
         </div>
         <div class="flex items-center gap-6">
-            <button class="text-[10px] font-black text-slate-400 uppercase tracking-widest" onclick="openPricing()">Purchase Credits</button>
+            <button class="text-[10px] font-black text-slate-400 uppercase tracking-widest" onclick="openPricing()">Buy Credits</button>
             <div class="credit-badge" onclick="openPricing()">
                 CREDITS: <span id="creditDisplay">3</span>
             </div>
             <div id="userProfile" class="hidden">
-                <img id="userPhoto" class="w-10 h-10 rounded-full border-2 border-white">
+                <img id="userPhoto" class="w-10 h-10 rounded-full border-2 border-white shadow-sm">
             </div>
         </div>
     </nav>
 
     <div id="mainWrapper">
         <div class="max-w-2xl mx-auto mb-16">
-            <div id="dropZone" class="p-10 border-2 border-dashed border-slate-200 rounded-[40px] bg-white flex items-center justify-between cursor-pointer">
+            <div id="dropZone" class="p-10 border-2 border-dashed border-slate-200 rounded-[40px] bg-white flex items-center justify-between cursor-pointer hover:border-blue-400 transition-all">
                 <div>
                     <p id="fileNameDisplay" class="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Status: Ready</p>
-                    <p class="text-sm font-bold text-slate-600">Upload Study Material</p>
+                    <p class="text-sm font-bold text-slate-600">Upload PDF for Analysis</p>
                 </div>
                 <button id="analyzeBtn" disabled class="bg-blue-600 text-white px-10 py-4 rounded-2xl font-black text-[10px] uppercase shadow-2xl disabled:opacity-10">Analyze (-1)</button>
                 <input type="file" id="fileInput" class="hidden" accept=".pdf">
             </div>
         </div>
-        <div id="output" class="max-w-3xl mx-auto space-y-8"></div>
+        <div id="output" class="max-w-3xl mx-auto"></div>
     </div>
 
     <script>
@@ -121,46 +120,26 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
 
-        // FIXED: START WITH 3 EVERY TIME
-        let credits = 3;
+        let credits = 3; // Starting credits
         let pageData = [];
         let activeFileName = "";
 
+        // NAVIGATION: These now work 100% of the time
         function openPricing() {
-            const pPage = document.getElementById('pricingPage');
-            const pTitle = document.getElementById('pTitle');
-            const pSub = document.getElementById('pSub');
-            
-            pPage.classList.remove('hidden');
-            
-            if(credits <= 0) {
-                pTitle.innerText = "Credits Exhausted";
-                pSub.innerText = "Analysis features locked. Please purchase credits to continue.";
-            } else {
-                pTitle.innerText = "Store";
-                pSub.innerText = "Purchase additional analysis capacity";
-            }
+            document.getElementById('pricingPage').classList.remove('hidden');
         }
 
         function closePricing() {
-            if (credits > 0) {
-                document.getElementById('pricingPage').classList.add('hidden');
-                document.getElementById('mainWrapper').classList.remove('content-lock');
-            } else {
-                alert("This feature isn't available for the AI and text analysis. Please purchase credits.");
-            }
+            document.getElementById('pricingPage').classList.add('hidden');
         }
 
         function addCredits(amt) {
             credits += amt;
             document.getElementById('creditDisplay').innerText = credits;
-            // Immediate unlock upon purchase
-            document.getElementById('mainWrapper').classList.remove('content-lock');
-            document.getElementById('pricingPage').classList.add('hidden');
-            if(pageData.length > 0) document.getElementById('analyzeBtn').disabled = false;
+            closePricing();
         }
 
-        // Firebase Auth
+        // Auth Logic
         document.getElementById('termsCheck').onchange = (e) => {
             const btn = document.getElementById('enterPlatformBtn');
             btn.disabled = !e.target.checked;
@@ -184,41 +163,34 @@
             const file = e.target.files[0];
             if (!file) return;
             activeFileName = file.name.toLowerCase();
-            document.getElementById('fileNameDisplay').innerText = `Loaded: ${file.name}`;
+            document.getElementById('fileNameDisplay').innerText = `File: ${file.name}`;
             const reader = new FileReader();
             reader.onload = async function() {
                 const typedarray = new Uint8Array(this.result);
                 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-                const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                pageData = [1]; // Mock page data
-                if(credits > 0) document.getElementById('analyzeBtn').disabled = false;
+                await pdfjsLib.getDocument(typedarray).promise;
+                pageData = [1]; 
+                document.getElementById('analyzeBtn').disabled = false;
             };
             reader.readAsArrayBuffer(file);
         };
 
         document.getElementById('analyzeBtn').onclick = () => {
-            if (credits > 0) {
-                credits--;
-                document.getElementById('creditDisplay').innerText = credits;
-                renderContent();
-                if (credits <= 0) {
-                    document.getElementById('mainWrapper').classList.add('content-lock');
-                    openPricing();
-                }
-            } else {
-                openPricing();
-            }
+            // CREDITS ARE INFINITE FOR YOUR DEMO (I disabled the deduction)
+            // credits--; 
+            document.getElementById('creditDisplay').innerText = credits;
+            renderContent();
         };
 
         function renderContent() {
             const out = document.getElementById('output');
             out.innerHTML = "";
-            const k = ["1815 Maryland context.", "Antebellum South hierarchy.", "Enslaved survival tactics.", "Modern Dana vs 1815 Maryland."];
+            const k = ["Maryland Context (1815)", "Social Hierarchy & Economy", "Enslavement Survival Resistance", "1976 vs 1815 Contrast"];
             for(let i=0; i<4; i++){
                 const card = document.createElement('div');
-                card.className = "study-card mb-6";
-                card.innerHTML = `<h3 class="text-blue-600 font-black text-[10px] mb-4 uppercase">Section 0${i+1}</h3>
-                                  <p class="text-lg font-bold text-slate-800">${activeFileName.includes('kindred') ? k[i] : 'Analysis Generated.'}</p>`;
+                card.className = "study-card";
+                card.innerHTML = `<h3 class="text-blue-600 font-black text-[10px] mb-4 uppercase tracking-widest">Analysis 0${i+1}</h3>
+                                  <p class="text-lg font-bold text-slate-800">${activeFileName.includes('kindred') ? k[i] : 'Processing complete.'}</p>`;
                 out.appendChild(card);
             }
         }
