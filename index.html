@@ -1,93 +1,267 @@
-function renderContent(data) {
-    const out = document.getElementById('output');
-    out.innerHTML = "";
-    
-    // RULE 1: NEVER ANALYZE PAGE 1 (Title/Index)
-    const realData = data.slice(1);
-    const allSentences = data.flatMap(p => p.text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 50));
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocuVision | Professional Narrative Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <style>
+        .study-card { border-radius: 40px; background: white; border: 1px solid #f1f5f9; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .study-card:hover { transform: translateY(-5px); shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
+        .level-btn { transition: 0.3s; border: 1px solid #e2e8f0; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .level-btn.active { background: #2563eb; color: white; border-color: #2563eb; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4); }
+        .quiz-opt { cursor: pointer; transition: 0.2s; border: 2px solid #f8fafc; border-radius: 24px; padding: 1.5rem; font-size: 0.9rem; display: flex; align-items: start; gap: 15px; margin-bottom: 1rem; }
+        .history-item { cursor: pointer; transition: 0.2s; border-radius: 15px; margin-bottom: 10px; border: 1px solid #f1f5f9; padding: 1.2rem; background: white; }
+        .history-item:hover { background: #f8fafc; border-color: #3b82f6; transform: translateX(8px); }
+        aside { scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-[#fcfdfe] min-h-screen font-sans text-slate-900 flex flex-col">
 
-    realData.forEach((page) => {
-        const rawSentences = page.text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 35);
+    <header class="h-24 bg-white border-b flex justify-between items-center px-12 sticky top-0 z-50 shadow-sm">
+        <div class="flex items-center gap-5 cursor-pointer" onclick="location.reload()">
+            <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-blue-200">DV</div>
+            <div>
+                <h1 class="text-sm font-black uppercase tracking-tighter italic leading-none">DocuVision</h1>
+                <p class="text-[10px] font-bold text-blue-600 uppercase tracking-[0.2em] mt-1">Narrative Intelligence</p>
+            </div>
+        </div>
+        <div id="userProfile" class="hidden flex items-center gap-4">
+            <div class="text-right">
+                <p id="userName" class="text-[10px] font-black uppercase text-slate-400"></p>
+                <button id="logoutBtn" class="text-[9px] font-black text-red-400 uppercase hover:text-red-600">Terminate Session</button>
+            </div>
+            <img id="userPhoto" class="w-11 h-11 rounded-full border-2 border-blue-50 shadow-md">
+        </div>
+        <button id="loginBtn" class="bg-slate-900 text-white px-8 py-3 rounded-full text-[11px] font-black uppercase tracking-[0.15em] hover:bg-blue-600 transition-all shadow-xl shadow-slate-200">Authenticate</button>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <aside class="w-85 bg-white border-r flex flex-col p-10 hidden lg:flex">
+            <div class="flex items-center gap-3 mb-10">
+                <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                <h3 class="text-[11px] font-black text-slate-300 uppercase tracking-[0.3em]">Library History</h3>
+            </div>
+            <div id="historyList" class="flex-1 overflow-y-auto space-y-2 pr-2"></div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto p-16 bg-[#f8fafc]/30">
+            <div class="max-w-5xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-10 mb-20">
+                    <div id="dropZone" class="p-12 border-2 border-dashed border-slate-200 rounded-[50px] bg-white flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 group transition-all shadow-sm">
+                        <div class="w-12 h-12 mb-4 bg-slate-50 rounded-full flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                            <span class="text-slate-400 group-hover:text-blue-600">PDF</span>
+                        </div>
+                        <p id="fileNameDisplay" class="text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Upload Source</p>
+                        <input type="file" id="fileInput" class="hidden" accept=".pdf">
+                    </div>
+                    
+                    <div class="md:col-span-2 bg-white p-12 rounded-[50px] border border-slate-100 flex flex-col justify-between shadow-xl shadow-slate-200/50">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="text-[11px] font-black text-slate-300 uppercase mb-6 tracking-[0.2em]">Analysis Depth</h3>
+                                <div class="flex gap-4">
+                                    <button class="level-btn active w-32 py-4 rounded-2xl text-[11px] font-black uppercase" id="l1">Summary</button>
+                                    <button class="level-btn w-32 py-4 rounded-2xl text-[11px] font-black uppercase" id="l2">Logic</button>
+                                    <button class="level-btn w-32 py-4 rounded-2xl text-[11px] font-black uppercase" id="l3">Mastery</button>
+                                </div>
+                            </div>
+                            <button id="analyzeBtn" disabled class="bg-blue-600 text-white px-14 py-6 rounded-[30px] font-black text-xs uppercase shadow-2xl shadow-blue-300 hover:scale-105 active:scale-95 disabled:opacity-20 transition-all">Analyze Document</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="output" class="space-y-16 pb-20"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // FIREBASE CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyA9QkqiRl50Vp8UdYqVsJHVekSHi1PNweA",
+            authDomain: "docuvision-25f5a.firebaseapp.com",
+            projectId: "docuvision-25f5a",
+            storageBucket: "docuvision-25f5a.firebasestorage.app",
+            messagingSenderId: "438841299291",
+            appId: "1:438841299291:web:d27751aff4bafdbcddca7e"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let currentLevel = "l1";
+        let pageData = [];
+
+        // AUTH LOGIC
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('loginBtn').classList.add('hidden');
+                document.getElementById('userProfile').classList.remove('hidden');
+                document.getElementById('userPhoto').src = user.photoURL;
+                document.getElementById('userName').innerText = user.displayName;
+                loadHistory(user.uid);
+            }
+        });
+
+        document.getElementById('loginBtn').onclick = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+        document.getElementById('logoutBtn').onclick = () => auth.signOut().then(() => location.reload());
+
+        // DEPTH TOGGLES
+        document.querySelectorAll('.level-btn').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentLevel = btn.id;
+            };
+        });
+
+        // PDF PROCESSING
+        const fInput = document.getElementById('fileInput');
+        document.getElementById('dropZone').onclick = () => fInput.click();
         
-        // --- POWER WORD SCANNER (Fixes the "This section" error) ---
-        const getHighValueContext = (sentenceList) => {
-            if (!sentenceList.length) return "specialized thematic data";
-            
-            // Finds the longest sentence in the first 3 lines (usually the most descriptive)
-            const target = sentenceList.slice(0, 3).reduce((a, b) => a.length > b.length ? a : b);
-            
-            // Extracts words that aren't common (the, is, and) to find the actual topic
-            const stopWords = ['this', 'page', 'section', 'talks', 'about', 'the', 'and', 'with', 'from'];
-            const words = target.split(' ').filter(w => !stopWords.includes(w.toLowerCase()));
-            
-            // Returns a 10-word chunk starting from the first "real" word
-            return words.slice(0, 10).join(' ').replace(/[,.;:]$/, "");
+        fInput.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            document.getElementById('fileNameDisplay').innerText = file.name.toUpperCase();
+            const reader = new FileReader();
+            reader.onload = async function() {
+                const typedarray = new Uint8Array(this.result);
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                pageData = [];
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    pageData.push({ num: i, text: textContent.items.map(item => item.str).join(" ") });
+                }
+                document.getElementById('analyzeBtn').disabled = false;
+            };
+            reader.readAsArrayBuffer(file);
         };
 
-        const primaryThesis = getHighValueContext(rawSentences);
-        const secondaryContext = rawSentences[2] ? getHighValueContext(rawSentences.slice(2)) : "contextual evidence";
-        const logicChain = rawSentences.find(s => s.match(/because|since|therefore|resulted|consequently|witnessed/i)) || rawSentences[0];
+        document.getElementById('analyzeBtn').onclick = () => {
+            renderContent(pageData);
+            saveToCloud();
+        };
 
-        const card = document.createElement('div');
-        card.className = "study-card p-12 mb-12 shadow-sm border border-slate-100 bg-white animate-in fade-in slide-in-from-bottom-4";
-        
-        let contentHTML = "";
+        // THE "LONG CODE" CONTENT ENGINE
+        function renderContent(data) {
+            const out = document.getElementById('output');
+            out.innerHTML = "";
+            
+            // SKIP PAGE 1 MANDATE
+            const analyzedPages = data.slice(1);
+            const globalText = data.flatMap(p => p.text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 50));
 
-        // MODE 1: DEEP SUMMARY
-        if (currentLevel === "l1") {
-            contentHTML = `
-                <div class="space-y-8">
-                    <div>
-                        <h4 class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-4">Core Thematic Analysis</h4>
-                        <p class="text-slate-800 text-[17px] font-bold leading-relaxed border-l-4 border-blue-600 pl-6">
-                            This page centers on the analysis of <span class="text-blue-700">${primaryThesis}...</span>
-                        </p>
+            analyzedPages.forEach((page) => {
+                const sentences = page.text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 40);
+                
+                // DATA EXTRACTION CLEANER
+                const extractTopic = (list) => {
+                    if (!list.length) return "specialized analytical data";
+                    // Find the most descriptive sentence (longest) in the top half
+                    const base = list.slice(0, 4).reduce((a, b) => a.length > b.length ? a : b);
+                    const stopWords = ['this', 'page', 'section', 'talks', 'about', 'contains', 'discusses', 'covers'];
+                    const clean = base.split(' ').filter(w => !stopWords.includes(w.toLowerCase()));
+                    return clean.slice(0, 10).join(' ').replace(/[,.;:]$/, "");
+                };
+
+                const primaryThesis = extractTopic(sentences);
+                const secondThesis = sentences[3] ? extractTopic(sentences.slice(3)) : "supplementary evidence";
+                const logicPoint = sentences.find(s => s.match(/because|since|therefore|resulted|consequently|led to/i)) || sentences[0];
+
+                const card = document.createElement('div');
+                card.className = "study-card p-14 mb-12 shadow-2xl shadow-slate-200/40";
+                
+                let bodyHTML = "";
+
+                if (currentLevel === "l1") {
+                    bodyHTML = `
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                            <div>
+                                <h4 class="text-[11px] font-black text-blue-600 uppercase tracking-widest mb-5">Primary Narrative</h4>
+                                <p class="text-slate-800 text-lg font-bold leading-relaxed border-l-8 border-blue-600 pl-8">
+                                    The section investigates the specific details regarding <span class="text-blue-700">${primaryThesis}...</span>
+                                </p>
+                            </div>
+                            <div class="bg-slate-50 p-10 rounded-[35px] border border-slate-100">
+                                <h4 class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4">Supporting Data</h4>
+                                <p class="text-slate-600 text-sm leading-relaxed italic font-medium">
+                                    The text reinforces this by examining <span class="text-slate-900">${secondThesis}</span>, providing the necessary factual context for the page's conclusion.
+                                </p>
+                            </div>
+                        </div>`;
+                } else if (currentLevel === "l2") {
+                    bodyHTML = `
+                        <div class="bg-slate-900 p-12 rounded-[45px] text-white relative overflow-hidden shadow-2xl">
+                            <div class="absolute top-0 right-0 p-8 opacity-10 text-6xl font-black italic">LOGIC</div>
+                            <h4 class="text-[11px] font-black text-blue-400 uppercase tracking-widest mb-8">Causal Reasoning Chain</h4>
+                            <div class="bg-white/5 p-10 rounded-3xl border border-white/10 backdrop-blur-sm">
+                                <p class="text-lg font-bold leading-relaxed text-blue-50">${logicPoint}.</p>
+                            </div>
+                        </div>`;
+                } else {
+                    const correct = sentences[0] || "Verified claim.";
+                    const wrong = globalText.filter(s => !s.includes(primaryThesis.split(' ')[0]))[Math.floor(Math.random() * 12)] || "General textual note.";
+                    const choices = [{ t: correct, c: true }, { t: wrong, c: false }].sort(() => Math.random() - 0.5);
+
+                    bodyHTML = `
+                        <div class="max-w-2xl">
+                            <h4 class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-8">Verification Challenge: ${primaryThesis}</h4>
+                            <p class="text-md font-bold text-slate-800 mb-10 italic">Which of the following statements is explicitly validated by the text on Page ${page.num}?</p>
+                            <div class="space-y-4">
+                                ${choices.map(o => `
+                                    <div class="quiz-opt group bg-white shadow-sm border-slate-100 hover:border-blue-500" onclick="this.style.borderColor='${o.c ? '#10b981' : '#ef4444'}'; this.style.background='${o.c ? '#f0fdf4' : '#fef2f2'}';">
+                                        <div class="w-8 h-8 rounded-full border-2 border-slate-200 group-hover:border-blue-500 flex-shrink-0 flex items-center justify-center text-xs font-black">?</div>
+                                        <p class="text-slate-600 font-bold leading-relaxed">${o.t}</p>
+                                    </div>`).join('')}
+                            </div>
+                        </div>`;
+                }
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-12">
+                        <div class="flex items-center gap-4">
+                            <span class="bg-blue-600 text-white px-6 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg shadow-blue-200">PAGE ${page.num}</span>
+                            <div class="h-px w-20 bg-slate-100"></div>
+                            <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest italic">Thread Verified</span>
+                        </div>
                     </div>
-                    <div class="bg-slate-50 p-8 rounded-[30px] border border-slate-100">
-                        <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Supporting Framework</h4>
-                        <p class="text-slate-600 text-[13px] leading-relaxed italic">
-                            The text builds its primary argument by referencing <span class="font-bold">${secondaryContext}</span>, creating a link between the abstract themes and the specific evidence presented on this page.
-                        </p>
-                    </div>
-                </div>`;
-        } 
-
-        // MODE 2: CAUSAL LOGIC
-        else if (currentLevel === "l2") {
-            contentHTML = `
-                <div class="bg-slate-900 p-10 rounded-[40px] text-white shadow-2xl">
-                    <h4 class="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-6">Causal Logic Flow</h4>
-                    <div class="bg-white/5 p-8 rounded-3xl border border-white/10">
-                        <p class="text-[15px] font-bold leading-relaxed text-blue-50">${logicChain}.</p>
-                    </div>
-                </div>`;
-        } 
-
-        // MODE 3: MASTERY CHALLENGE
-        else {
-            const correctClaim = rawSentences[0] || "Verified claim.";
-            const distractor = allSentences.filter(s => !s.includes(primaryThesis.split(' ')[0]))[Math.floor(Math.random() * 10)] || "General annotation.";
-            const options = [{ text: correctClaim, isCorrect: true }, { text: distractor, isCorrect: false }].sort(() => Math.random() - 0.5);
-
-            contentHTML = `
-                <div class="space-y-6">
-                    <h4 class="text-[11px] font-bold text-slate-400 mb-8 uppercase tracking-widest italic">Verification: ${primaryThesis}</h4>
-                    <div class="space-y-4">
-                        ${options.map(opt => `
-                            <div class="quiz-opt group" onclick="this.style.borderColor='${opt.isCorrect ? '#10b981' : '#ef4444'}'; this.style.background='${opt.isCorrect ? '#f0fdf4' : '#fef2f2'}';">
-                                <div class="w-6 h-6 rounded-full border-2 border-slate-200 mt-0.5 group-hover:border-blue-500 flex-shrink-0 flex items-center justify-center text-[10px] font-bold group-hover:text-blue-500">?</div>
-                                <p class="text-slate-600 font-semibold leading-relaxed">${opt.text}</p>
-                            </div>`).join('')}
-                    </div>
-                </div>`;
+                    ${bodyHTML}`;
+                out.appendChild(card);
+            });
         }
 
-        card.innerHTML = `
-            <div class="flex justify-between items-center mb-10 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                <span class="bg-blue-600 text-white px-5 py-2 rounded-full shadow-lg shadow-blue-100">PAGE ${page.num}</span>
-                <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div> ENGINE ANALYSIS ACTIVE</div>
-            </div>
-            ${contentHTML}`;
-        out.appendChild(card);
-    });
-}
+        // HISTORY PERSISTENCE
+        async function saveToCloud() {
+            const user = auth.currentUser;
+            if (user) {
+                await db.collection('users').doc(user.uid).collection('history').add({
+                    fileName: document.getElementById('fileNameDisplay').innerText,
+                    data: pageData,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                loadHistory(user.uid);
+            }
+        }
+
+        async function loadHistory(uid) {
+            const snap = await db.collection('users').doc(uid).collection('history').orderBy('timestamp', 'desc').limit(15).get();
+            const list = document.getElementById('historyList');
+            list.innerHTML = "";
+            snap.forEach(doc => {
+                const item = document.createElement('div');
+                item.className = "history-item text-[10px] font-black uppercase truncate flex items-center gap-3";
+                item.innerHTML = `<div class="w-1.5 h-1.5 bg-blue-600 rounded-full"></div> ${doc.data().fileName}`;
+                item.onclick = () => { pageData = doc.data().data; renderContent(pageData); };
+                list.appendChild(item);
+            });
+        }
+    </script>
+</body>
+</html>
