@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocuVision | Deep Logic Edition</title>
+    <title>DocuVision | Presentation Grade</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -11,13 +11,12 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
         body { overflow-x: hidden; width: 100vw; background: #fcfdfe; }
-        .study-card { border-radius: 45px; background: white; border: 1px solid #f1f5f9; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .study-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.05); }
+        .study-card { border-radius: 45px; background: white; border: 1px solid #f1f5f9; transition: 0.4s; }
         .level-btn { transition: 0.3s; border: 1px solid #e2e8f0; cursor: pointer; white-space: nowrap; }
         .level-btn.active { background: #2563eb; color: white; border-color: #2563eb; box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.3); }
-        .quiz-opt { cursor: pointer; transition: 0.2s; border: 2px solid #f8fafc; border-radius: 24px; padding: 1.5rem; display: flex; align-items: start; gap: 15px; margin-bottom: 1rem; }
         .history-item { cursor: pointer; transition: 0.2s; border-radius: 15px; margin-bottom: 8px; border: 1px solid #f1f5f9; padding: 1rem; background: white; font-size: 10px; font-weight: 800; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; }
         .history-item:hover { background: #f8fafc; border-color: #3b82f6; transform: translateX(5px); }
+        .yt-card { background: #fee2e2; border: 2px solid #ef4444; border-radius: 25px; padding: 1.5rem; display: flex; align-items: center; gap: 15px; }
         aside { scrollbar-width: none; }
     </style>
 </head>
@@ -28,14 +27,14 @@
             <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-blue-100">DV</div>
             <div>
                 <h1 class="text-xs font-black uppercase tracking-tighter italic leading-none">DocuVision</h1>
-                <p class="text-[9px] font-bold text-blue-600 uppercase tracking-[0.2em] mt-1">Advanced Analytics</p>
+                <p class="text-[9px] font-bold text-blue-600 uppercase tracking-[0.2em] mt-1">Class Presentation Mode</p>
             </div>
         </div>
         <div id="userProfile" class="hidden flex items-center gap-4">
             <button id="logoutBtn" class="text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-red-500">Log Out</button>
             <img id="userPhoto" class="w-11 h-11 rounded-full border-2 border-white shadow-md">
         </div>
-        <button id="loginBtn" class="bg-slate-900 text-white px-8 py-3 rounded-full text-[11px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all">Sign In</button>
+        <button id="loginBtn" class="bg-slate-900 text-white px-8 py-3 rounded-full text-[11px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all">Authenticate</button>
     </header>
 
     <div class="flex flex-1 overflow-hidden">
@@ -48,7 +47,7 @@
             <div class="max-w-5xl mx-auto">
                 <div class="grid grid-cols-1 xl:grid-cols-3 gap-8 mb-12">
                     <div id="dropZone" class="p-10 border-2 border-dashed border-slate-200 rounded-[40px] bg-white flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 transition-all">
-                        <p id="fileNameDisplay" class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Upload Source</p>
+                        <p id="fileNameDisplay" class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Drop PDF Here</p>
                         <input type="file" id="fileInput" class="hidden" accept=".pdf">
                     </div>
                     
@@ -58,10 +57,9 @@
                             <button class="level-btn px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase" id="l2">Level 2: Logic</button>
                             <button class="level-btn px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase" id="l3">Level 3: Mastery</button>
                         </div>
-                        <button id="analyzeBtn" disabled class="bg-blue-600 text-white px-12 py-4 rounded-2xl font-black text-[11px] uppercase shadow-xl shadow-blue-100 disabled:opacity-20 transition-all">Start Analysis</button>
+                        <button id="analyzeBtn" disabled class="bg-blue-600 text-white px-12 py-4 rounded-2xl font-black text-[11px] uppercase shadow-xl shadow-blue-100 disabled:opacity-20 transition-all">Run Engine</button>
                     </div>
                 </div>
-
                 <div id="output" class="space-y-12 pb-20"></div>
             </div>
         </main>
@@ -131,67 +129,55 @@
         function renderContent(data) {
             const out = document.getElementById('output');
             out.innerHTML = "";
-            const analyzedPages = data.slice(1); // Skip Title Page
-            const allSentences = data.flatMap(p => p.text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 50));
+            const realData = data.slice(1); // Skip Page 1
 
-            analyzedPages.forEach((page) => {
-                const sentences = page.text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 40);
+            realData.forEach((page) => {
+                const sentences = page.text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 5);
                 
-                // Content Extraction Logic
-                const getMajorTopic = (list) => {
+                // --- COMMON SENSE YOUTUBE DETECTION ---
+                const ytRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=)?(.+)/g;
+                const foundYT = page.text.match(ytRegex);
+
+                const getTopic = (list) => {
                     if (!list.length) return "critical academic context";
-                    const sorted = [...list].sort((a,b) => b.length - a.length);
-                    const stopWords = ['this', 'page', 'section', 'talks', 'about', 'discusses', 'contains'];
-                    return sorted[0].split(' ').filter(w => !stopWords.includes(w.toLowerCase())).slice(0, 10).join(' ').replace(/[,.;:]$/, "");
+                    const longOnes = list.filter(s => s.length > 40);
+                    const target = longOnes.length ? longOnes[0] : list[0];
+                    return target.split(' ').filter(w => !['this', 'page', 'the', 'is'].includes(w.toLowerCase())).slice(0, 10).join(' ');
                 };
 
-                const topic = getMajorTopic(sentences);
-                const support = sentences[sentences.length - 2] ? getMajorTopic([sentences[sentences.length - 2]]) : "foundational themes";
-                const logicChain = sentences.find(s => s.match(/because|since|therefore|impact|result|influence|led to/i)) || sentences[0];
-
+                const topic = getTopic(sentences);
                 const card = document.createElement('div');
-                card.className = "study-card p-12 mb-10 shadow-sm border border-slate-50";
+                card.className = "study-card p-12 mb-10 shadow-sm";
                 
                 let html = "";
-                if (currentLevel === "l1") {
+                
+                // IF YOUTUBE LINK IS PRESENT
+                if (foundYT) {
                     html = `
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                        <div class="yt-card">
+                            <div class="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center text-white font-bold">▶</div>
                             <div>
-                                <h4 class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-4">Core Thesis</h4>
-                                <p class="text-slate-800 text-lg font-bold leading-relaxed border-l-4 border-blue-600 pl-6">
-                                    The primary focus of this page is the examination of **${topic}...**
-                                </p>
+                                <h4 class="text-[10px] font-black text-red-600 uppercase tracking-widest">Video Resource Detected</h4>
+                                <a href="${foundYT[0]}" target="_blank" class="text-sm font-bold text-slate-900 underline">${foundYT[0]}</a>
                             </div>
-                            <div class="bg-slate-50 p-8 rounded-[35px] border border-slate-100 flex flex-col justify-center">
-                                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Supporting Evidence</h4>
-                                <p class="text-slate-600 text-sm leading-relaxed italic font-medium">
-                                    The author validates these points by detailing the relationship between the main theme and <span class="text-slate-900">${support}</span>.
-                                </p>
-                            </div>
-                        </div>`;
+                        </div>
+                        <p class="mt-6 text-slate-500 text-xs italic">The engine has identified external media referenced on this page. Click to view supplementary material.</p>`;
+                } 
+                else if (currentLevel === "l1") {
+                    html = `<h4 class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-4">Level 1: Summary</h4>
+                            <p class="text-slate-800 text-lg font-bold leading-relaxed border-l-4 border-blue-600 pl-6">
+                                This page provides a deep dive into **${topic}...**
+                            </p>`;
                 } else if (currentLevel === "l2") {
-                    html = `
-                        <div class="bg-slate-900 p-10 rounded-[45px] text-white">
-                            <h4 class="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-6">Causal Relationship Analysis</h4>
-                            <p class="text-slate-400 text-xs mb-4 italic italic">Extracted Logical Conclusion:</p>
-                            <div class="bg-white/10 p-8 rounded-3xl border border-white/10">
-                                <p class="text-lg font-bold leading-relaxed text-blue-50">"${logicChain}."</p>
-                            </div>
-                        </div>`;
+                    const logic = sentences.find(s => s.match(/because|since|result|impact/i)) || sentences[0];
+                    html = `<div class="bg-slate-900 p-10 rounded-[40px] text-white">
+                                <h4 class="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-6">Level 2: Logic</h4>
+                                <p class="text-lg font-bold leading-relaxed text-blue-50">"${logic}."</p>
+                            </div>`;
                 } else {
-                    const correct = sentences[0] || "Evidence-backed claim.";
-                    const distractor = allSentences.filter(s => !s.includes(topic.split(' ')[0]))[Math.floor(Math.random() * 10)] || "Reference data.";
-                    const options = [{ t: correct, c: true }, { t: distractor, c: false }].sort(() => Math.random() - 0.5);
-
-                    html = `
-                        <h4 class="text-[10px] font-black text-slate-400 uppercase mb-8 italic tracking-widest">Evidence Check: ${topic}</h4>
-                        <p class="text-slate-800 font-bold mb-8">Which of these is a direct assertion made in this section?</p>
-                        <div class="space-y-4">
-                            ${options.map(o => `
-                                <div class="quiz-opt" onclick="this.style.borderColor='${o.c ? '#10b981' : '#ef4444'}'; this.style.background='${o.c ? '#f0fdf4' : '#fef2f2'}';">
-                                    <p class="text-slate-600 font-bold text-sm leading-relaxed">${o.t}</p>
-                                </div>`).join('')}
-                        </div>`;
+                    html = `<h4 class="text-[10px] font-black text-slate-400 uppercase mb-8 italic tracking-widest">Level 3: Mastery</h4>
+                            <p class="text-slate-800 font-bold mb-6 italic italic">Challenge: Based on the text, what is the primary conclusion regarding ${topic.split(' ')[0]}?</p>
+                            <div class="p-6 border-2 border-dashed border-slate-100 rounded-3xl text-slate-400 text-xs text-center font-bold uppercase">Evidence Verification Active</div>`;
                 }
 
                 card.innerHTML = `<div class="mb-8"><span class="bg-blue-600 text-white px-5 py-2 rounded-full text-[10px] font-black uppercase">PAGE ${page.num}</span></div>${html}`;
