@@ -1,197 +1,92 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocuVision | Narrative Engine</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <style>
-        .study-card { border-radius: 32px; border: 1px solid #f1f5f9; background: white; transition: 0.3s; }
-        .level-btn { transition: 0.2s; border: 1px solid #e2e8f0; cursor: pointer; }
-        .level-btn.active { background: #2563eb; color: white; border-color: #2563eb; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
-        .history-item { cursor: pointer; transition: 0.2s; border-radius: 12px; margin-bottom: 8px; border: 1px solid #f1f5f9; padding: 1rem; }
-        .history-item:hover { background: #f8fafc; transform: translateX(5px); border-color: #3b82f6; }
-        .quiz-opt { cursor: pointer; transition: 0.2s; border: 2px solid #f8fafc; border-radius: 16px; padding: 1rem; font-size: 0.8rem; margin-bottom: 0.5rem; }
-    </style>
-</head>
-<body class="bg-[#fcfdfe] min-h-screen font-sans text-slate-900 flex flex-col">
+function renderContent(data) {
+    const out = document.getElementById('output');
+    out.innerHTML = "";
+    
+    // 1. CREATE DISTRACTOR POOL: Gathers real sentences from the whole PDF
+    const allSentences = data.flatMap(p => p.text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 30));
 
-    <header class="h-20 bg-white border-b flex justify-between items-center px-10 sticky top-0 z-50">
-        <div class="flex items-center gap-4 cursor-pointer" onclick="location.reload()">
-            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg">DV</div>
-            <h1 class="text-xs font-black uppercase tracking-tighter">DocuVision <span class="text-blue-600">Narrative</span></h1>
-        </div>
-        <div id="userProfile" class="hidden flex items-center gap-3">
-            <img id="userPhoto" class="w-9 h-9 rounded-full border-2 border-white shadow-sm">
-            <button id="logoutBtn" class="text-[9px] font-black text-slate-400 uppercase">Logout</button>
-        </div>
-        <button id="loginBtn" class="bg-slate-900 text-white px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-blue-600">Sign In</button>
-    </header>
+    data.forEach((page, index) => {
+        const text = page.text;
+        const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 25);
+        
+        // 2. KEYWORD SCANNER
+        const noise = ['the', 'this', 'that', 'with', 'from', 'their', 'which', 'about', 'would', 'could', 'should'];
+        const words = text.match(/\b[A-Z]?[a-z]{6,}\b/g) || [];
+        const keywords = [...new Set(words.filter(w => !noise.includes(w.toLowerCase())))].slice(0, 5);
 
-    <div class="flex flex-1 overflow-hidden">
-        <aside class="w-72 bg-white border-r flex flex-col p-6 hidden lg:flex">
-            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Library History</h3>
-            <div id="historyList" class="flex-1 overflow-y-auto"></div>
-        </aside>
+        // 3. DYNAMIC NARRATIVE
+        const mainSubject = sentences[0] ? sentences[0].split(' ').slice(0, 6).join(' ') : "this section";
+        const subSubject = sentences[1] ? sentences[1].split(' ').slice(0, 6).join(' ') : "supporting context";
+        const intro = `This page analyzes **${mainSubject}...** while primarily focusing on **${subSubject}...**`;
 
-        <main class="flex-1 overflow-y-auto p-10">
-            <div class="max-w-4xl mx-auto">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-                    <div id="dropZone" class="p-10 border-2 border-dashed border-slate-200 rounded-[40px] bg-white flex flex-col items-center justify-center cursor-pointer hover:border-blue-400">
-                        <p id="fileNameDisplay" class="text-[10px] font-black text-slate-400 uppercase">Upload PDF</p>
-                        <input type="file" id="fileInput" class="hidden" accept=".pdf">
+        const card = document.createElement('div');
+        card.className = "study-card p-10 mb-8 shadow-sm border border-slate-100 bg-white";
+        
+        let inner = "";
+        if (currentLevel === "l1") {
+            inner = `<p class="text-slate-700 text-[13px] mb-6 border-l-4 border-blue-600 pl-5 font-medium leading-relaxed">${intro}</p>
+                     <div class="flex flex-wrap gap-2">${keywords.map(w => `<span class="bg-blue-50 text-blue-700 px-4 py-1.5 rounded-full text-[10px] font-bold border border-blue-100 shadow-sm">#${w.toUpperCase()}</span>`).join('')}</div>`;
+        } else if (currentLevel === "l2") {
+            const logicPath = sentences.find(s => s.match(/because|result|since|therefore|however/i)) || sentences[0];
+            inner = `<div class="bg-slate-900 p-8 rounded-[32px] text-white shadow-xl">
+                        <h4 class="text-[9px] font-black text-blue-400 uppercase mb-4 tracking-[0.2em]">Causal Logic Breakdown</h4>
+                        <p class="text-[11px] opacity-70 mb-4 italic">${intro}</p>
+                        <div class="bg-white/5 p-5 rounded-2xl border border-white/10"><p class="text-xs font-bold leading-relaxed">${logicPath}.</p></div>
+                     </div>`;
+        } else {
+            // 4. PROFESSIONAL QUIZ ENGINE (TRICKY MODE)
+            // Picks a real fact from THIS page
+            const correctFact = sentences[0]; 
+            // Picks a real fact from a RANDOM DIFFERENT page to act as a distractor
+            const randomDistractor = allSentences[Math.floor(Math.random() * allSentences.length)];
+            
+            const choices = [
+                { t: correctFact, c: true },
+                { t: randomDistractor, c: false }
+            ].sort(() => Math.random() - 0.5);
+
+            inner = `
+                <div class="space-y-6">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-1 h-4 bg-blue-600 rounded-full"></div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Evidence Verification</p>
                     </div>
-                    
-                    <div class="md:col-span-2 bg-white p-8 rounded-[40px] border border-slate-100 flex flex-col justify-between shadow-sm">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h3 class="text-[10px] font-black text-slate-400 uppercase mb-4 tracking-widest">Analysis Depth</h3>
-                                <div class="flex gap-3">
-                                    <button class="level-btn active px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase" id="l1">L1</button>
-                                    <button class="level-btn px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase" id="l2">L2</button>
-                                    <button class="level-btn px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase" id="l3">L3</button>
+                    <p class="text-xs font-bold text-slate-800">Based on the text above, which statement is factually accurate?</p>
+                    <div class="space-y-3">
+                        ${choices.map(o => `
+                            <div class="quiz-opt border-2 border-slate-50 hover:border-blue-500 hover:bg-blue-50/30 p-5 rounded-2xl transition-all group" onclick="checkAnswer(this, ${o.c}, ${index})">
+                                <div class="flex gap-4">
+                                    <div class="w-5 h-5 rounded-full border-2 border-slate-200 group-hover:border-blue-500 flex-shrink-0"></div>
+                                    <p class="text-[12px] text-slate-600 leading-snug">${o.t}</p>
                                 </div>
-                            </div>
-                            <button id="analyzeBtn" disabled class="bg-blue-600 text-white px-10 py-4 rounded-[20px] font-black text-xs uppercase shadow-xl hover:scale-105 disabled:opacity-20 transition-all">Analyze</button>
-                        </div>
+                            </div>`).join('')}
                     </div>
-                </div>
-                <div id="output" class="space-y-8"></div>
-            </div>
-        </main>
-    </div>
-
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyA9QkqiRl50Vp8UdYqVsJHVekSHi1PNweA",
-            authDomain: "docuvision-25f5a.firebaseapp.com",
-            projectId: "docuvision-25f5a",
-            storageBucket: "docuvision-25f5a.firebasestorage.app",
-            messagingSenderId: "438841299291",
-            appId: "1:438841299291:web:d27751aff4bafdbcddca7e"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-
-        let currentLevel = "l1";
-        let pageData = [];
-
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                document.getElementById('loginBtn').classList.add('hidden');
-                document.getElementById('userProfile').classList.remove('hidden');
-                document.getElementById('userPhoto').src = user.photoURL;
-                loadHistory(user.uid);
-            } else {
-                document.getElementById('loginBtn').classList.remove('hidden');
-                document.getElementById('userProfile').classList.add('hidden');
-            }
-        });
-
-        document.getElementById('loginBtn').onclick = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
-        document.getElementById('logoutBtn').onclick = () => auth.signOut();
-
-        document.querySelectorAll('.level-btn').forEach(btn => {
-            btn.onclick = () => {
-                document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentLevel = btn.id;
-            };
-        });
-
-        const fInput = document.getElementById('fileInput');
-        document.getElementById('dropZone').onclick = () => fInput.click();
-        fInput.onchange = async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            document.getElementById('fileNameDisplay').innerText = file.name.toUpperCase();
-            const reader = new FileReader();
-            reader.onload = async function() {
-                const typedarray = new Uint8Array(this.result);
-                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-                const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                pageData = [];
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const textContent = await page.getTextContent();
-                    pageData.push({ num: i, text: textContent.items.map(item => item.str).join(" ") });
-                }
-                document.getElementById('analyzeBtn').disabled = false;
-            };
-            reader.readAsArrayBuffer(file);
-        };
-
-        document.getElementById('analyzeBtn').onclick = () => {
-            renderContent(pageData);
-            saveToCloud();
-        };
-
-        function renderContent(data) {
-            const out = document.getElementById('output');
-            out.innerHTML = "";
-            data.forEach((page, index) => {
-                const text = page.text;
-                const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 25);
-                
-                // Keyword Logic
-                const noise = ['the', 'this', 'that', 'with', 'from', 'their', 'which', 'about', 'would'];
-                const words = text.match(/\b[A-Z]?[a-z]{5,}\b/g) || [];
-                const keywords = [...new Set(words.filter(w => !noise.includes(w.toLowerCase())))].slice(0, 5);
-
-                // Descriptive Logic
-                const topicA = sentences[0] ? sentences[0].split(' ').slice(0, 6).join(' ') : "General Content";
-                const topicB = sentences[1] ? sentences[1].split(' ').slice(0, 6).join(' ') : "Supporting Details";
-                const intro = `This page analyzes **${topicA}...** while primarily focusing on **${topicB}...**`;
-
-                const card = document.createElement('div');
-                card.className = "study-card p-10 mb-8 shadow-sm";
-                
-                let inner = "";
-                if (currentLevel === "l1") {
-                    inner = `<p class="text-slate-700 text-sm mb-6 border-l-4 border-blue-600 pl-4 font-medium">${intro}</p>
-                             <div class="flex flex-wrap gap-2">${keywords.map(w => `<span class="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-[10px] font-bold shadow-sm border border-blue-100">#${w.toUpperCase()}</span>`).join('')}</div>`;
-                } else if (currentLevel === "l2") {
-                    inner = `<div class="bg-slate-900 p-6 rounded-2xl text-white shadow-lg"><p class="text-xs mb-4 opacity-70 italic">${intro}</p><p class="text-xs font-bold text-blue-300">CORE: ${sentences[0]}</p></div>`;
-                } else {
-                    inner = `<p class="text-xs italic mb-4 text-slate-500">${intro}</p>
-                             <div class="quiz-opt" onclick="this.style.borderColor='#10b981'">${sentences[0] || "Verified source claim."}</div>
-                             <div class="quiz-opt" onclick="this.style.borderColor='#ef4444'">Secondary metadata analysis.</div>`;
-                }
-
-                card.innerHTML = `<div class="mb-6"><span class="text-[10px] font-black bg-blue-600 text-white px-3 py-1 rounded-full uppercase">PAGE ${page.num}</span></div>${inner}`;
-                out.appendChild(card);
-            });
+                    <div id="feedback-${index}" class="hidden p-5 rounded-2xl text-[11px] font-medium transition-all animate-in fade-in zoom-in duration-300"></div>
+                </div>`;
         }
 
-        async function saveToCloud() {
-            const user = auth.currentUser;
-            if (user) {
-                await db.collection('users').doc(user.uid).collection('history').add({
-                    fileName: document.getElementById('fileNameDisplay').innerText,
-                    data: pageData,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                loadHistory(user.uid);
-            }
-        }
+        card.innerHTML = `<div class="mb-8 flex justify-between items-center">
+                            <span class="text-[10px] font-black bg-blue-600 text-white px-4 py-1.5 rounded-full uppercase tracking-tighter">PAGE ${page.num}</span>
+                            <span class="text-[9px] font-bold text-slate-300 uppercase tracking-widest">Data Stream v3.0</span>
+                         </div>${inner}`;
+        out.appendChild(card);
+    });
+}
 
-        async function loadHistory(uid) {
-            const snap = await db.collection('users').doc(uid).collection('history').orderBy('timestamp', 'desc').limit(10).get();
-            const list = document.getElementById('historyList');
-            list.innerHTML = "";
-            snap.forEach(doc => {
-                const item = document.createElement('div');
-                item.className = "history-item text-[10px] font-bold uppercase truncate";
-                item.innerText = doc.data().fileName;
-                item.onclick = () => renderContent(doc.data().data);
-                list.appendChild(item);
-            });
-        }
-    </script>
-</body>
-</html>
+// Global Answer Checker for Professional Feedback
+window.checkAnswer = (el, isCorrect, id) => {
+    const feedback = document.getElementById(`feedback-${id}`);
+    const options = el.parentElement.querySelectorAll('.quiz-opt');
+    
+    options.forEach(opt => opt.style.pointerEvents = 'none'); // Prevent double clicking
+    
+    if (isCorrect) {
+        el.className = "quiz-opt border-2 border-emerald-500 bg-emerald-50 p-5 rounded-2xl transition-all";
+        feedback.className = "block mt-4 p-5 rounded-2xl text-[11px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200";
+        feedback.innerText = "CORRECT: Your analysis of the primary source is accurate.";
+    } else {
+        el.className = "quiz-opt border-2 border-rose-500 bg-rose-50 p-5 rounded-2xl transition-all";
+        feedback.className = "block mt-4 p-5 rounded-2xl text-[11px] font-bold bg-rose-100 text-rose-700 border border-rose-200";
+        feedback.innerText = "INCORRECT: That statement belongs to a different section of the document.";
+    }
+};
