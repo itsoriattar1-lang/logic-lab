@@ -3,127 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocuVision | Professional Suite</title>
+    <title>DocuVision | Professional AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #fcfdfe; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #fcfdfe; color: #1e293b; }
         
-        /* THE MODAL OVERLAY */
+        /* AUTH MODAL STYLES */
         #authOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px);
-            z-index: 9999; display: flex; align-items: center; justify-center;
+            background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px);
+            z-index: 9999; display: flex; align-items: center; justify-content: center;
         }
         .modal-box {
-            background: white; width: 90%; max-width: 450px; padding: 3rem;
-            border-radius: 40px; box-shadow: 0 50px 100px -20px rgba(0,0,0,0.15);
+            background: white; width: 90%; max-width: 420px; padding: 3rem;
+            border-radius: 40px; box-shadow: 0 50px 100px -20px rgba(0,0,0,0.12);
             border: 1px solid #f1f5f9; text-align: center;
         }
-        .login-btn {
-            width: 100%; padding: 1.2rem; border-radius: 18px; font-weight: 800;
-            text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em;
-            transition: 0.3s; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; gap: 10px;
+        .login-option {
+            width: 100%; padding: 1.1rem; border-radius: 16px; font-weight: 800;
+            text-transform: uppercase; font-size: 10px; letter-spacing: 0.1em;
+            transition: 0.3s; margin-bottom: 0.8rem; display: flex; align-items: center; justify-content: center;
         }
-        .study-card { border-radius: 32px; background: white; border: 1px solid #f1f5f9; }
+
+        .study-card { border-radius: 32px; background: white; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: 0.3s ease; }
+        .level-btn { transition: 0.3s; cursor: pointer; font-weight: 800; text-transform: uppercase; font-size: 11px; padding: 1rem 1.5rem; border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0; }
+        .level-btn.active { background: #2563eb; color: white; border-color: #2563eb; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2); }
         .skeleton { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 12px; }
         @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .quiz-option { border: 2px solid #f1f5f9; padding: 1rem; border-radius: 12px; margin-top: 0.5rem; cursor: pointer; transition: 0.2s; font-size: 14px; font-weight: 600; }
+        .quiz-option:hover { border-color: #3b82f6; background: #eff6ff; }
     </style>
 </head>
 <body class="p-6 md:p-12">
 
     <div id="authOverlay">
         <div class="modal-box">
-            <div class="w-16 h-16 bg-blue-600 rounded-3xl flex items-center justify-center text-white font-black text-2xl mx-auto mb-6 shadow-xl">D</div>
-            <h2 class="text-2xl font-extrabold mb-2 tracking-tight text-slate-900">Welcome to DocuVision</h2>
-            <p class="text-slate-400 font-bold text-[10px] uppercase tracking-widest mb-10">Advanced AI Document Intelligence</p>
+            <div class="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black text-xl mx-auto mb-6 shadow-lg">D</div>
+            <h2 class="text-xl font-black mb-2 tracking-tight text-slate-900 uppercase">System Access</h2>
+            <p class="text-slate-400 font-bold text-[9px] uppercase tracking-[0.2em] mb-8">Professional Document Intelligence</p>
             
-            <button id="googleLogin" class="login-btn bg-slate-900 text-white hover:bg-black">
-                <span>Sign in with Google</span>
-            </button>
+            <button id="modalGoogleBtn" class="login-option bg-slate-900 text-white hover:bg-black">Sign in with Google</button>
+            <button class="login-option border border-slate-200 text-slate-400 cursor-not-allowed opacity-60">Email & Password</button>
             
-            <button class="login-btn border border-slate-200 text-slate-600 hover:bg-slate-50 cursor-not-allowed opacity-50">
-                <span>Email & Password</span>
-            </button>
-            
-            <p class="text-[9px] font-bold text-slate-300 uppercase italic mt-2 mb-8">Working on adding more login options...</p>
+            <p class="text-[8px] font-black text-slate-300 uppercase italic mt-2 mb-8">Working on adding more login options...</p>
             
             <div class="flex items-center gap-3 mb-8 justify-start">
                 <input type="checkbox" id="termsCheck" class="w-5 h-5 rounded accent-blue-600 cursor-pointer">
-                <label for="termsCheck" class="text-[11px] font-bold text-slate-500 cursor-pointer">I agree to the Terms and Conditions</label>
+                <label for="termsCheck" class="text-[10px] font-extrabold text-slate-500 cursor-pointer uppercase tracking-tight">I agree to terms & conditions</label>
             </div>
 
-            <button id="enterBtn" disabled class="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl shadow-blue-200 opacity-20 transition-all">Enter Platform</button>
+            <button id="enterPlatformBtn" disabled class="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl opacity-20 transition-all">Enter Platform</button>
         </div>
     </div>
 
-    <nav class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 mb-16">
+    <nav class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 mb-12">
         <div class="flex items-center gap-4">
             <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg">D</div>
-            <h1 class="text-lg font-black tracking-tight">DocuVision <span class="text-blue-600 italic">Enterprise</span></h1>
+            <h1 class="text-lg font-black tracking-tight">DocuVision <span class="text-blue-600 italic">Pro</span></h1>
         </div>
-        <div id="userProfile" class="flex items-center gap-3 bg-white p-2 pr-6 rounded-full border border-slate-100 shadow-sm">
-            <img id="userPhoto" class="w-10 h-10 rounded-full border-2 border-white shadow-md">
-            <span id="userName" class="text-[10px] font-black uppercase text-slate-700">Guest</span>
+        
+        <div class="flex bg-slate-100 p-1.5 rounded-2xl gap-2">
+            <button class="level-btn active" id="l1">Quick Summary</button>
+            <button class="level-btn" id="l2">Logic & Why</button>
+            <button class="level-btn" id="l3">Deep Mastery</button>
+        </div>
+
+        <div id="authSection" class="flex items-center gap-4">
+            <div id="userProfile" class="hidden flex items-center gap-3">
+                <img id="userPhoto" class="w-10 h-10 rounded-full border-2 border-white shadow-md">
+                <button id="logoutBtn" class="text-[10px] font-bold text-red-400 uppercase">Exit</button>
+            </div>
         </div>
     </nav>
 
-    <div class="max-w-xl mx-auto mb-16 text-center">
-        <div class="flex bg-slate-100 p-1.5 rounded-2xl gap-2 mb-8 w-fit mx-auto">
-            <button class="px-6 py-3 rounded-xl font-extrabold text-[10px] uppercase bg-blue-600 text-white">Quick Summary</button>
-            <button class="px-6 py-3 rounded-xl font-extrabold text-[10px] uppercase text-slate-400">Deep Mastery</button>
-        </div>
-        
-        <div id="dropZone" class="p-8 border-2 border-dashed border-slate-200 rounded-[30px] bg-white flex items-center justify-between cursor-pointer">
-            <span id="fileNameDisplay" class="text-xs font-black text-slate-400 uppercase">Load Source</span>
-            <button id="analyzeBtn" disabled class="bg-slate-900 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase">Analyze</button>
+    <div class="max-w-xl mx-auto mb-16">
+        <div id="dropZone" class="p-8 border-2 border-dashed border-slate-200 rounded-[30px] bg-white flex items-center justify-between cursor-pointer hover:border-blue-400 transition-all group">
+            <span id="fileNameDisplay" class="text-xs font-black text-slate-400 uppercase tracking-widest">Select PDF</span>
+            <button id="analyzeBtn" disabled class="bg-blue-600 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl disabled:opacity-20 transition-all">Analyze</button>
             <input type="file" id="fileInput" class="hidden" accept=".pdf">
         </div>
     </div>
 
     <div id="output" class="max-w-3xl mx-auto space-y-8"></div>
+    <div id="quizContainer" class="max-w-3xl mx-auto mt-16 hidden"></div>
 
     <script>
-        // CONFIG
-        const firebaseConfig = { apiKey: "AIzaSyA9QkqiRl50Vp8UdYqVsJHVekSHi1PNweA", authDomain: "docuvision-25f5a.firebaseapp.com", projectId: "docuvision-25f5a" };
+        const firebaseConfig = { apiKey: "AIzaSyA9QkqiRl50Vp8UdYqVsJHVekSHi1PNweA", authDomain: "docuvision-25f5a.firebaseapp.com", projectId: "docuvision-25f5a", storageBucket: "docuvision-25f5a.firebasestorage.app", messagingSenderId: "438841299291", appId: "1:438841299291:web:d27751aff4bafdbcddca7e" };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
+        const db = firebase.firestore();
 
+        let pageData = [];
+        let currentLevel = "l1";
+        const HF_TOKEN = "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";
+
+        // GATEWAY LOGIC
         const termsCheck = document.getElementById('termsCheck');
-        const enterBtn = document.getElementById('enterBtn');
+        const enterPlatformBtn = document.getElementById('enterPlatformBtn');
         const authOverlay = document.getElementById('authOverlay');
 
-        // ENABLE BUTTON ON CHECKBOX
         termsCheck.onchange = () => {
-            enterBtn.disabled = !termsCheck.checked;
-            enterBtn.style.opacity = termsCheck.checked ? "1" : "0.2";
+            enterPlatformBtn.disabled = !termsCheck.checked;
+            enterPlatformBtn.style.opacity = termsCheck.checked ? "1" : "0.2";
         };
 
-        // LOGIN FLOW
-        document.getElementById('googleLogin').onclick = () => {
-            if(!termsCheck.checked) return alert("Please agree to the terms first.");
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).then(result => {
-                document.getElementById('userPhoto').src = result.user.photoURL;
-                document.getElementById('userName').innerText = result.user.displayName;
-                authOverlay.style.display = 'none'; // Hide the modal
-            });
+        document.getElementById('modalGoogleBtn').onclick = () => {
+            if(!termsCheck.checked) return alert("Please accept the terms and conditions.");
+            auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
         };
 
-        enterBtn.onclick = () => {
-            if(!auth.currentUser) {
-                alert("Please sign in with Google to enter the platform.");
+        enterPlatformBtn.onclick = () => {
+            if(!auth.currentUser) alert("Please sign in to proceed.");
+            else authOverlay.style.display = 'none';
+        };
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('userProfile').classList.remove('hidden');
+                document.getElementById('userPhoto').src = user.photoURL;
+                if(termsCheck.checked) authOverlay.style.display = 'none';
             } else {
-                authOverlay.style.display = 'none';
+                document.getElementById('userProfile').classList.add('hidden');
+                authOverlay.style.display = 'flex';
             }
-        };
+        });
 
-        // --- PDF ENGINE (Keeping your existing logic) ---
+        document.getElementById('logoutBtn').onclick = () => auth.signOut();
+
+        // UI LOGIC
+        document.querySelectorAll('.level-btn').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentLevel = btn.id;
+                if(pageData.length) renderContent(pageData);
+            };
+        });
+
         const fInput = document.getElementById('fileInput');
-        document.getElementById('dropZone').onclick = (e) => { if(e.target.id !== 'analyzeBtn') fInput.click(); };
+        document.getElementById('dropZone').onclick = (e) => { if(e.target !== document.getElementById('analyzeBtn')) fInput.click(); };
         
         fInput.onchange = async (e) => {
             const file = e.target.files[0];
@@ -134,11 +157,87 @@
                 const typedarray = new Uint8Array(this.result);
                 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
                 const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                pageData = [];
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    pageData.push({ num: i, text: textContent.items.map(item => item.str).join(" ") });
+                }
                 document.getElementById('analyzeBtn').disabled = false;
-                // Logic continues...
             };
             reader.readAsArrayBuffer(file);
         };
+
+        async function fetchAI(text) {
+            const cleanText = text.replace(/\s+/g, ' ').substring(0, 1000);
+            try {
+                const response = await fetch("https://api-inference.huggingface.co/models/facebook/bart-large-cnn", {
+                    headers: { Authorization: "Bearer " + HF_TOKEN },
+                    method: "POST",
+                    body: JSON.stringify({ inputs: cleanText })
+                });
+                const result = await response.json();
+                return result[0]?.summary_text || "Analysis complete.";
+            } catch {
+                return text.split(/[.!?]/).slice(0, 2).join(". ") + ".";
+            }
+        }
+
+        document.getElementById('analyzeBtn').onclick = () => renderContent(pageData);
+
+        async function renderContent(data) {
+            const out = document.getElementById('output');
+            const quizOut = document.getElementById('quizContainer');
+            out.innerHTML = "";
+            quizOut.innerHTML = "";
+            quizOut.classList.add('hidden');
+            let fullDocContext = "";
+
+            for(const page of data.slice(1)) {
+                const card = document.createElement('div');
+                card.className = "study-card p-10";
+                card.innerHTML = `<div class="h-4 w-full skeleton mb-2"></div><div class="h-4 w-2/3 skeleton"></div>`;
+                out.appendChild(card);
+
+                const aiText = await fetchAI(page.text);
+                fullDocContext += aiText + " ";
+                
+                let html = "";
+                if (currentLevel === "l1") {
+                    html = `<h3 class="text-blue-600 font-black text-[10px] mb-4">SUMMARY</h3><p class="text-lg font-bold text-slate-800">${aiText.split('.')[0]}.</p>`;
+                } else if (currentLevel === "l2") {
+                    html = `<h3 class="text-emerald-600 font-black text-[10px] mb-4">CAUSAL LOGIC</h3><p class="text-lg font-bold italic text-slate-800">"${aiText}"</p>`;
+                } else {
+                    html = `<h3 class="text-purple-600 font-black text-[10px] uppercase mb-4 tracking-widest">DEEP ANALYSIS</h3><p class="text-md font-bold leading-relaxed text-slate-700">${aiText}</p>`;
+                }
+
+                card.innerHTML = `<div class="flex justify-between items-center mb-6 border-b border-slate-50 pb-4">
+                    <span class="text-[10px] font-black text-slate-300 tracking-tighter">SECTION ${page.num}</span>
+                    <div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                </div>${html}`;
+            }
+
+            if (currentLevel === "l3") renderQuiz(fullDocContext);
+        }
+
+        function renderQuiz(context) {
+            const quizOut = document.getElementById('quizContainer');
+            quizOut.classList.remove('hidden');
+            quizOut.innerHTML = `<div class="bg-slate-900 p-12 rounded-[40px] text-white shadow-2xl"><h2 class="text-blue-400 font-black text-xs uppercase tracking-[0.3em] mb-8 text-center">Final Mastery Exam</h2><div id="quizList" class="space-y-10"></div></div>`;
+            
+            const words = context.split(' ').filter(w => w.length > 7).slice(0, 5);
+            words.forEach((word, i) => {
+                const cleanWord = word.replace(/[^a-zA-Z]/g, "").toUpperCase();
+                const q = document.createElement('div');
+                q.innerHTML = `<p class="text-lg font-bold mb-4">${i+1}. In the context of this document, how does the concept of "${cleanWord}" impact the overall argument?</p>
+                    <div class="grid grid-cols-1 gap-2">
+                        <div class="quiz-option text-slate-300 border-slate-700">A) It acts as the primary driver of the described outcome.</div>
+                        <div class="quiz-option text-slate-300 border-slate-700">B) It serves as a secondary piece of evidence for the thesis.</div>
+                        <div class="quiz-option text-slate-300 border-slate-700">C) It is presented as a counter-point to be analyzed further.</div>
+                    </div>`;
+                document.getElementById('quizList').appendChild(q);
+            });
+        }
     </script>
 </body>
 </html>
