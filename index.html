@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocuVision | Advanced AI Presentation</title>
+    <title>DocuVision | Full Logic Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -11,25 +11,15 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap');
-        
         body { font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; width: 100vw; background: #fcfdfe; color: #0f172a; }
-        
-        .study-card { border-radius: 40px; background: white; border: 1px solid #f1f5f9; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-        .study-card:hover { transform: translateY(-8px); box-shadow: 0 30px 60px -12px rgba(0,0,0,0.08); }
-        
-        .level-btn { transition: 0.3s; border: 1px solid #e2e8f0; cursor: pointer; font-weight: 800; text-transform: uppercase; font-size: 10px; tracking: 0.1em; }
+        .study-card { border-radius: 40px; background: white; border: 1px solid #f1f5f9; transition: all 0.4s ease; }
+        .level-btn { transition: 0.3s; border: 1px solid #e2e8f0; cursor: pointer; font-weight: 800; text-transform: uppercase; font-size: 10px; }
         .level-btn.active { background: #2563eb; color: white; border-color: #2563eb; box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.3); }
-        
-        .history-item { cursor: pointer; transition: 0.2s; border-radius: 18px; margin-bottom: 10px; border: 1px solid #f1f5f9; padding: 1.2rem; background: white; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+        .history-item { cursor: pointer; transition: 0.2s; border-radius: 18px; margin-bottom: 10px; border: 1px solid #f1f5f9; padding: 1.2rem; background: white; font-size: 10px; font-weight: 800; text-transform: uppercase; }
         .history-item:hover { background: #f8fafc; border-color: #3b82f6; transform: translateX(8px); }
-        
         .ai-pulse { position: relative; }
         .ai-pulse::after { content: ''; position: absolute; width: 100%; height: 100%; top: 0; left: 0; border-radius: inherit; box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); animation: pulse 2s infinite; }
-        
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(37, 99, 235, 0); } 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); } }
-        
-        aside { scrollbar-width: none; }
-        #historyList::-webkit-scrollbar { width: 0; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -39,27 +29,19 @@
             <div class="w-14 h-14 bg-blue-600 rounded-3xl flex items-center justify-center text-white font-black text-2xl shadow-2xl shadow-blue-200">D</div>
             <div>
                 <h1 class="text-sm font-black uppercase tracking-tighter italic leading-none">DocuVision <span class="text-blue-600">Pro</span></h1>
-                <p class="text-[9px] font-extrabold text-slate-400 uppercase tracking-[0.3em] mt-1">Institutional Intelligence</p>
+                <p class="text-[9px] font-extrabold text-slate-400 uppercase tracking-[0.3em] mt-1">Full-Context Analysis</p>
             </div>
         </div>
-        
-        <div id="userProfile" class="hidden flex items-center gap-5 bg-slate-50 p-2 pr-6 rounded-full border border-slate-100">
+        <div id="userProfile" class="hidden flex items-center gap-5">
             <img id="userPhoto" class="w-10 h-10 rounded-full border-2 border-white shadow-md">
-            <div class="flex flex-col">
-                <span id="userName" class="text-[10px] font-black uppercase tracking-widest text-slate-700"></span>
-                <button id="logoutBtn" class="text-[9px] font-bold text-red-400 uppercase text-left hover:text-red-600">Terminate</button>
-            </div>
+            <button id="logoutBtn" class="text-[9px] font-bold text-red-400 uppercase hover:text-red-600">Logout</button>
         </div>
-        
-        <button id="loginBtn" class="bg-slate-900 text-white px-10 py-4 rounded-full text-[11px] font-black uppercase tracking-widest hover:bg-blue-600 shadow-xl shadow-slate-200 transition-all">Sign In to Archive</button>
+        <button id="loginBtn" class="bg-slate-900 text-white px-10 py-4 rounded-full text-[11px] font-black uppercase tracking-widest hover:bg-blue-600 shadow-xl shadow-slate-200">Sign In</button>
     </header>
 
     <div class="flex flex-1 overflow-hidden">
         <aside class="w-72 flex-shrink-0 bg-white border-r flex flex-col p-10 hidden lg:flex">
-            <div class="flex items-center justify-between mb-10">
-                <h3 class="text-[11px] font-black text-slate-300 uppercase tracking-[0.3em]">Cloud Library</h3>
-                <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
-            </div>
+            <h3 class="text-[11px] font-black text-slate-300 uppercase tracking-[0.3em] mb-10">Archive</h3>
             <div id="historyList" class="flex-1 overflow-y-auto"></div>
         </aside>
 
@@ -67,37 +49,30 @@
             <div class="max-w-6xl mx-auto">
                 
                 <div id="aiConsole" class="hidden mb-12 p-8 bg-slate-900 rounded-[40px] text-white shadow-2xl relative overflow-hidden">
-                    <div class="absolute -right-10 -top-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl"></div>
                     <div class="flex items-center justify-between relative z-10">
                         <div class="flex items-center gap-6">
-                            <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center ai-pulse">
-                                <span class="text-xs">AI</span>
-                            </div>
+                            <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center ai-pulse"><span class="text-xs">AI</span></div>
                             <div>
-                                <h4 id="statusTitle" class="text-[11px] font-black text-blue-400 uppercase tracking-[0.2em]">Ready for Injection</h4>
-                                <p id="statusMsg" class="text-slate-400 text-xs mt-1">Waiting for source document upload...</p>
+                                <h4 id="statusTitle" class="text-[11px] font-black text-blue-400 uppercase tracking-[0.2em]">Context Loaded</h4>
+                                <p id="statusMsg" class="text-slate-400 text-xs mt-1">Synchronizing logic patterns...</p>
                             </div>
                         </div>
-                        <div id="typeBadge" class="hidden px-5 py-2 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-emerald-400">Classified</div>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 xl:grid-cols-4 gap-8 mb-16">
-                    <div id="dropZone" class="xl:col-span-1 p-10 border-2 border-dashed border-slate-200 rounded-[45px] bg-white flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 group transition-all shadow-sm">
-                        <div class="w-12 h-12 bg-slate-50 rounded-2xl mb-4 flex items-center justify-center group-hover:bg-blue-50">
-                            <span class="text-slate-400 group-hover:text-blue-600 font-black">PDF</span>
-                        </div>
-                        <p id="fileNameDisplay" class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Select Source</p>
+                    <div id="dropZone" class="p-10 border-2 border-dashed border-slate-200 rounded-[45px] bg-white flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 transition-all shadow-sm">
+                        <p id="fileNameDisplay" class="text-[10px] font-black text-slate-400 uppercase text-center">Select PDF</p>
                         <input type="file" id="fileInput" class="hidden" accept=".pdf">
                     </div>
                     
-                    <div class="xl:col-span-3 bg-white p-10 rounded-[45px] border border-slate-100 flex flex-col lg:flex-row items-center justify-between shadow-xl shadow-slate-200/50">
+                    <div class="xl:col-span-3 bg-white p-10 rounded-[45px] border border-slate-100 flex flex-col lg:flex-row items-center justify-between shadow-xl">
                         <div class="flex flex-wrap gap-4 mb-6 lg:mb-0">
                             <button class="level-btn active px-8 py-5 rounded-2xl" id="l1">Level 1: Summary</button>
                             <button class="level-btn px-8 py-5 rounded-2xl" id="l2">Level 2: Logic</button>
                             <button class="level-btn px-8 py-5 rounded-2xl" id="l3">Level 3: Mastery</button>
                         </div>
-                        <button id="analyzeBtn" disabled class="bg-blue-600 text-white px-16 py-6 rounded-3xl font-black text-sm uppercase tracking-widest shadow-2xl shadow-blue-300 hover:scale-105 active:scale-95 disabled:opacity-20 transition-all">Analyze Document</button>
+                        <button id="analyzeBtn" disabled class="bg-blue-600 text-white px-16 py-6 rounded-3xl font-black text-sm uppercase tracking-widest shadow-2xl shadow-blue-300 disabled:opacity-20 transition-all">Analyze</button>
                     </div>
                 </div>
 
@@ -107,7 +82,6 @@
     </div>
 
     <script>
-        // CONFIG & STATE
         const firebaseConfig = { apiKey: "AIzaSyA9QkqiRl50Vp8UdYqVsJHVekSHi1PNweA", authDomain: "docuvision-25f5a.firebaseapp.com", projectId: "docuvision-25f5a", storageBucket: "docuvision-25f5a.firebasestorage.app", messagingSenderId: "438841299291", appId: "1:438841299291:web:d27751aff4bafdbcddca7e" };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
@@ -115,15 +89,12 @@
 
         let currentLevel = "l1";
         let pageData = [];
-        let docType = "General Analysis";
 
-        // AUTH
         auth.onAuthStateChanged(user => {
             if (user) {
                 document.getElementById('loginBtn').classList.add('hidden');
                 document.getElementById('userProfile').classList.remove('hidden');
                 document.getElementById('userPhoto').src = user.photoURL;
-                document.getElementById('userName').innerText = user.displayName;
                 loadHistory(user.uid);
             }
         });
@@ -131,7 +102,6 @@
         document.getElementById('loginBtn').onclick = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
         document.getElementById('logoutBtn').onclick = () => auth.signOut().then(() => location.reload());
 
-        // SELECTORS
         document.querySelectorAll('.level-btn').forEach(btn => {
             btn.onclick = () => {
                 document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
@@ -141,131 +111,86 @@
             };
         });
 
-        // PDF PROCESSING
         const fInput = document.getElementById('fileInput');
         document.getElementById('dropZone').onclick = () => fInput.click();
         
         fInput.onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-
             document.getElementById('aiConsole').classList.remove('hidden');
-            document.getElementById('statusTitle').innerText = "Processing Binary Data...";
             document.getElementById('fileNameDisplay').innerText = file.name.toUpperCase();
-
             const reader = new FileReader();
             reader.onload = async function() {
                 const typedarray = new Uint8Array(this.result);
                 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-                
-                try {
-                    const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                    pageData = [];
-                    let fullText = "";
-                    
-                    for (let i = 1; i <= pdf.numPages; i++) {
-                        const page = await pdf.getPage(i);
-                        const textContent = await page.getTextContent();
-                        const text = textContent.items.map(item => item.str).join(" ");
-                        pageData.push({ num: i, text: text });
-                        fullText += text + " ";
-                    }
-
-                    // "TRAINING" THE AI
-                    trainEngine(fullText);
-                    document.getElementById('analyzeBtn').disabled = false;
-                } catch (err) {
-                    console.error("PDF Fail:", err);
-                    document.getElementById('statusMsg').innerText = "ERROR: Failed to decrypt PDF structure.";
+                const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                pageData = [];
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    pageData.push({ num: i, text: textContent.items.map(item => item.str).join(" ") });
                 }
+                document.getElementById('analyzeBtn').disabled = false;
             };
             reader.readAsArrayBuffer(file);
         };
 
-        function trainEngine(text) {
-            const lower = text.toLowerCase();
-            const badge = document.getElementById('typeBadge');
-            
-            if (lower.includes('apartheid') || lower.includes('government') || lower.includes('history')) {
-                docType = "Historical Archive";
-            } else if (lower.includes('youtube') || lower.includes('video') || lower.includes('http')) {
-                docType = "Multimedia Reference";
-            } else {
-                docType = "Technical Document";
-            }
+        document.getElementById('analyzeBtn').onclick = () => { renderContent(pageData); saveToCloud(); };
 
-            document.getElementById('statusTitle').innerText = "Intelligence Synced";
-            document.getElementById('statusMsg').innerText = `Document classified as: ${docType}`;
-            badge.innerText = docType;
-            badge.classList.remove('hidden');
-        }
-
-        document.getElementById('analyzeBtn').onclick = () => {
-            renderContent(pageData);
-            saveToCloud();
-        };
-
-        // RENDERING ENGINE
         function renderContent(data) {
             const out = document.getElementById('output');
             out.innerHTML = "";
-            
-            // SKIP PAGE 1 RULE
             const workingSet = data.slice(1);
             
             workingSet.forEach((page) => {
-                const sentences = page.text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 20);
+                // SPLIT by sentence but keep colons and numbers intact
+                const rawSentences = page.text.match(/[^.!?]+[.!?:]+/g) || [page.text];
+                const cleanSentences = rawSentences.map(s => s.trim());
+
                 const ytRegex = /(https?:\/\/[^\s]+youtube[^\s]+|https?:\/\/youtu\.be[^\s]+)/g;
                 const links = page.text.match(ytRegex);
 
                 const card = document.createElement('div');
                 card.className = "study-card p-14 mb-10";
                 
-                let content = "";
+                let html = "";
 
                 if (links) {
-                    content = `
-                        <div class="bg-red-50 p-10 rounded-[35px] border border-red-100 flex items-center gap-8">
-                            <div class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center text-white text-xl shadow-xl shadow-red-200">▶</div>
-                            <div>
-                                <h4 class="text-[10px] font-black text-red-600 uppercase tracking-widest mb-2">Video Asset Found</h4>
-                                <a href="${links[0]}" target="_blank" class="text-lg font-bold text-slate-900 underline block truncate max-w-md">${links[0]}</a>
-                            </div>
-                        </div>`;
+                    html = `<div class="bg-red-50 p-8 rounded-3xl border border-red-100 flex items-center gap-6">
+                        <div class="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center text-white">▶</div>
+                        <a href="${links[0]}" target="_blank" class="text-sm font-bold text-slate-800 underline">${links[0]}</a>
+                    </div>`;
                 } else if (currentLevel === "l1") {
-                    const topSentence = sentences[0] || "No legible text found.";
-                    content = `
-                        <div class="flex flex-col lg:flex-row gap-12">
-                            <div class="flex-1">
-                                <h4 class="text-[11px] font-black text-blue-600 uppercase tracking-[0.2em] mb-6">Core Narrative Extraction</h4>
-                                <p class="text-xl font-bold leading-relaxed text-slate-800 border-l-8 border-blue-600 pl-10">
-                                    ${topSentence}...
-                                </p>
-                            </div>
-                            <div class="lg:w-1/3 bg-slate-50 p-10 rounded-[35px] border border-slate-100 flex flex-col justify-center">
-                                <p class="text-[10px] font-black text-slate-400 uppercase mb-4">AI Context Note</p>
-                                <p class="text-xs text-slate-600 font-medium italic">This page supports the primary ${docType.toLowerCase()} framework through specific evidence found in lines 1-15.</p>
-                            </div>
-                        </div>`;
+                    // COMMON SENSE ENGINE: If sentence ends with a reason-starter, grab more.
+                    let summaryText = cleanSentences[0];
+                    if (summaryText.toLowerCase().includes("because") || summaryText.endsWith(":")) {
+                        summaryText += " " + (cleanSentences[1] || "") + " " + (cleanSentences[2] || "");
+                    }
+
+                    html = `<h4 class="text-[11px] font-black text-blue-600 uppercase tracking-widest mb-6">Level 1: Summary</h4>
+                            <p class="text-xl font-bold leading-relaxed text-slate-800 border-l-8 border-blue-600 pl-10">
+                                ${summaryText}
+                            </p>`;
                 } else if (currentLevel === "l2") {
-                    const logic = sentences.find(s => s.match(/because|since|therefore|result|impact|due to/i)) || sentences[0];
-                    content = `
-                        <div class="bg-slate-900 p-12 rounded-[45px] text-white relative">
-                            <h4 class="text-[11px] font-black text-blue-400 uppercase tracking-[0.3em] mb-10">Logical Relationship Matrix</h4>
-                            <div class="p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md">
-                                <p class="text-lg font-bold leading-relaxed text-blue-50">"${logic}."</p>
-                            </div>
-                        </div>`;
+                    // FIND LOGIC: Search for "because" or "therefore"
+                    let logic = cleanSentences.find(s => s.toLowerCase().includes("because") || s.toLowerCase().includes("since")) || cleanSentences[0];
+                    let index = cleanSentences.indexOf(logic);
+                    if (logic.endsWith(":") || logic.toLowerCase().endsWith("because")) {
+                        logic += " " + (cleanSentences[index+1] || "") + " " + (cleanSentences[index+2] || "");
+                    }
+
+                    html = `<div class="bg-slate-900 p-12 rounded-[45px] text-white">
+                                <h4 class="text-[11px] font-black text-blue-400 uppercase tracking-widest mb-8">Level 2: Logic Flow</h4>
+                                <p class="text-lg font-bold leading-relaxed text-blue-50">"${logic}"</p>
+                            </div>`;
                 } else {
-                    content = `
-                        <div class="text-center">
-                            <h4 class="text-[11px] font-black text-slate-300 uppercase tracking-[0.3em] mb-10 italic">Level 3: Mastery Verification</h4>
-                            <p class="text-slate-800 text-lg font-bold mb-10 italic italic">"Explain how the content on this page influences the overall conclusion of the document."</p>
-                            <div class="inline-block px-10 py-4 bg-slate-50 rounded-full text-[10px] font-black uppercase text-slate-400">Oral Defense Mode Active</div>
-                        </div>`;
+                    html = `<div class="text-center">
+                                <h4 class="text-[11px] font-black text-slate-300 uppercase tracking-widest mb-8">Level 3: Mastery</h4>
+                                <p class="text-slate-800 text-lg font-bold italic">"Explain the connection between the evidence on this page and the main chapter thesis."</p>
+                            </div>`;
                 }
 
-                card.innerHTML = `<div class="mb-10"><span class="bg-blue-600 text-white px-6 py-2 rounded-full text-[10px] font-black uppercase shadow-lg shadow-blue-100">PAGE ${page.num}</span></div>${content}`;
+                card.innerHTML = `<div class="mb-8"><span class="bg-blue-600 text-white px-6 py-2 rounded-full text-[10px] font-black uppercase">PAGE ${page.num}</span></div>${html}`;
                 out.appendChild(card);
             });
         }
